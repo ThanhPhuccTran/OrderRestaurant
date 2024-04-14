@@ -1,4 +1,4 @@
-
+﻿
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using OrderRestaurant.Data;
@@ -26,7 +26,14 @@ namespace WebApplication1
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
-
+            // Thêm dịch vụ Session
+            builder.Services.AddDistributedMemoryCache(); // Sử dụng cache bộ nhớ phân tán (cho mục đích demo)
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(30); // Thiết lập thời gian timeout cho session
+                options.Cookie.HttpOnly = true; // Đảm bảo cookie chỉ được truy cập thông qua HTTP
+                options.Cookie.IsEssential = true; // Cookie là bắt buộc để ứng dụng hoạt động đúng
+            });
 
             //dinh nghia ra nhung cai dia chi
             builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
@@ -41,15 +48,27 @@ namespace WebApplication1
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            else
+            {
+                // Middleware error handling trong môi trường production
+                app.UseExceptionHandler("/Error");
+                // Đảm bảo mọi truy cập HTTP được chuyển hướng sang HTTPS
+                app.UseHsts();
+            }
             app.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new PhysicalFileProvider(
                 Path.Combine(builder.Environment.ContentRootPath, "wwwroot")),
                 RequestPath = "/wwwroot"
             });
+           
             app.UseHttpsRedirection();
-        
 
+
+            app.UseStaticFiles();
+
+            // Thêm middleware Session vào pipeline
+            app.UseSession();
 
             app.UseAuthorization();
            

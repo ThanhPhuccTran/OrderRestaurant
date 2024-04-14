@@ -12,6 +12,6 @@ namespace OrderRestaurant.Data
         [MaxLength(100)]
         public string TenLoai { get; set; } = string.Empty;
 
-        public List<Food> Foods { get; set; } = new List<Food>();
+        public List<Food> Foods { get; set; } 
     }
 }

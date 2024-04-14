@@ -20,6 +20,6 @@ namespace OrderRestaurant.Data
         public int CategoryId { get; set; }
         [ForeignKey("CategoryId")]
         public Category? Category { get; set; }
-        public List<OrderDetails> OrderDetails { get; set; } = new List<OrderDetails>();
+        public List<OrderDetails> OrderDetails { get; set; }
     }
 }

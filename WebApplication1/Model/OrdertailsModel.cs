@@ -9,7 +9,7 @@ namespace OrderRestaurant.Model
         public int OrderId { get; set; }
         public int Quantity { get; set; }
         public double UnitPrice { get; set; }
-        public string Note { get; set; }
+        public string? Note { get; set; }
         public int FoodId { get; set; }
         public Food Food { get; set; }
         
