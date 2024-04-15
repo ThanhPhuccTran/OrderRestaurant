@@ -14,12 +14,14 @@ namespace OrderRestaurant.Controllers
     {
         private readonly IFood _foodRepository;
         private readonly ApplicationDBContext _context;
+        private readonly ICategory _categoryRespository;
         private readonly Microsoft.AspNetCore.Hosting.IHostingEnvironment env;
-        public FoodController(IFood foodRepository, ApplicationDBContext context, Microsoft.AspNetCore.Hosting.IHostingEnvironment env)
+        public FoodController(IFood foodRepository,ICategory categoryRespository, ApplicationDBContext context, Microsoft.AspNetCore.Hosting.IHostingEnvironment env)
         {
             _foodRepository = foodRepository;
             _context = context;
             this.env = env;
+            _categoryRespository = categoryRespository;
         }
         [HttpGet]
         public async Task<IActionResult> GetFoodAll()
@@ -39,7 +41,10 @@ namespace OrderRestaurant.Controllers
         public async Task<IActionResult> CreateFoodImage([FromForm]FoodImage p)
         {
             var food = new Food { CategoryId = p.CategoryId, NameFood = p.NameFood, UnitPrice = p.UnitPrice };
-
+            if(!await _categoryRespository.CategoryExit(p.CategoryId))
+            {
+                return BadRequest("Loại món không được tìm thấy");
+            }
             // Xử lý ảnh
             if (p.Image.Length > 0)
             {
@@ -90,7 +95,7 @@ namespace OrderRestaurant.Controllers
             return food;
         }
         [HttpPut]
-        [Route("{id:int}")]
+        [Route("{id}")]
         public async Task<IActionResult> UpdateFood([FromRoute] int id, [FromForm] UpdateFoodDTO updateFood)
         {
             var model = await _foodRepository.UpdateFood(id, updateFood);
@@ -102,6 +107,16 @@ namespace OrderRestaurant.Controllers
             return Ok(model.ToFoodDto());
         }
 
-
+        [HttpDelete]
+        [Route("{id}")]
+        public async Task<IActionResult> DeleteFood([FromRoute] int id)
+        {
+            var model = await _foodRepository.DeleteFood(id);
+            if(model == null)
+            {
+                return NotFound();
+            }
+            return NoContent();
+        }
     }
 }

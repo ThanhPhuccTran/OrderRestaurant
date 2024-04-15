@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-
+using Newtonsoft.Json;
 namespace OrderRestaurant.Controllers
 {
     [Route("api/[controller]")]
@@ -42,7 +42,12 @@ namespace OrderRestaurant.Controllers
                 List<CartItemModel> cartItems;
                 if (cartItemsJson != null)
                 {
-                    cartItems = JsonSerializer.Deserialize<List<CartItemModel>>(cartItemsJson);
+                    var settings = new JsonSerializerSettings
+                    {
+                        FloatParseHandling = FloatParseHandling.Decimal
+                    };
+                    cartItems = JsonConvert.DeserializeObject<List<CartItemModel>>(cartItemsJson, settings);
+
                 }
                 else
                 {
@@ -67,7 +72,7 @@ namespace OrderRestaurant.Controllers
                 }
 
                 // Lưu thông tin giỏ hàng vào session
-                HttpContext.Session.SetString("CartItems", JsonSerializer.Serialize(cartItems));
+                HttpContext.Session.SetString("CartItems", JsonConvert.SerializeObject(cartItems));
 
                 return Ok("Món đã được thêm vào giỏ hàng");
             }
@@ -93,7 +98,7 @@ namespace OrderRestaurant.Controllers
                 else
                 {
                     // Nếu giỏ hàng tồn tại, trả về thông tin của giỏ hàng
-                    var cartItems = JsonSerializer.Deserialize<List<CartItemModel>>(cartItemsJson);
+                    var cartItems = JsonConvert.DeserializeObject<List<CartItemModel>>(cartItemsJson);
                     return Ok(cartItems);
                 }
             }
@@ -123,7 +128,7 @@ namespace OrderRestaurant.Controllers
                 }
 
                 // Chuyển đổi chuỗi JSON thành danh sách các mục trong giỏ hàng
-                var cartItems = JsonSerializer.Deserialize<List<CartItemModel>>(cartItemsJson);
+                var cartItems = JsonConvert.DeserializeObject<List<CartItemModel>>(cartItemsJson);
 
                 // Tạo đối tượng Order
                 var order = new Order
@@ -154,7 +159,7 @@ namespace OrderRestaurant.Controllers
                     };
                     order.OrderDetails.Add(orderDetail);
 
-                    totalAmount += item.Quantity * food.UnitPrice;
+                    totalAmount += (double)(item.Quantity * food.UnitPrice);
                 }
 
                 // Lưu đơn hàng và chi tiết đơn hàng vào cơ sở dữ liệu
@@ -228,7 +233,7 @@ namespace OrderRestaurant.Controllers
                 }
 
                 // Chuyển đổi chuỗi JSON thành danh sách các mục trong giỏ hàng
-                var cartItems = JsonSerializer.Deserialize<List<CartItemModel>>(cartItemsJson);
+                var cartItems = JsonConvert.DeserializeObject<List<CartItemModel>>(cartItemsJson);
 
                 // Cập nhật thông tin giỏ hàng
                 foreach (var updatedCartItem in updatedCartItems)
@@ -241,7 +246,7 @@ namespace OrderRestaurant.Controllers
                 }
 
                 // Lưu lại thông tin giỏ hàng đã được cập nhật vào session
-                HttpContext.Session.SetString("CartItems", JsonSerializer.Serialize(cartItems));
+                HttpContext.Session.SetString("CartItems", JsonConvert.SerializeObject(cartItems));
 
                 return Ok("Cập nhật giỏ hàng thành công");
             }
@@ -265,7 +270,7 @@ namespace OrderRestaurant.Controllers
                 }
 
                 // Chuyển đổi chuỗi JSON thành danh sách các mục trong giỏ hàng
-                var cartItems = JsonSerializer.Deserialize<List<CartItemModel>>(cartItemsJson);
+                var cartItems = JsonConvert.DeserializeObject<List<CartItemModel>>(cartItemsJson);
 
                 // Tìm kiếm và xóa mục có FoodId tương ứng khỏi giỏ hàng
                 var itemToRemove = cartItems.FirstOrDefault(item => item.foods.FoodId == foodId);
@@ -274,7 +279,7 @@ namespace OrderRestaurant.Controllers
                     cartItems.Remove(itemToRemove);
 
                     // Lưu lại thông tin giỏ hàng đã được cập nhật vào session
-                    HttpContext.Session.SetString("CartItems", JsonSerializer.Serialize(cartItems));
+                    HttpContext.Session.SetString("CartItems", JsonConvert.SerializeObject(cartItems));
 
                     return Ok("Đã xóa món khỏi giỏ hàng");
                 }

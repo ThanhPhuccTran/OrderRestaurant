@@ -13,6 +13,11 @@ namespace OrderRestaurant.Responsitory
             _context = context;
         }
 
+        public Task<bool> CategoryExit(int id)
+        {
+            return _context.Categoies.AnyAsync(s => s.CategoryId == id);
+        }
+
         public async Task<Category> CreateCategory(Category categoryFood)
         {
             await _context.Categoies.AddAsync(categoryFood);

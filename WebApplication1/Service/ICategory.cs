@@ -10,5 +10,6 @@ namespace OrderRestaurant.Service
         Task<Category> CreateCategory(Category categoryFood);
         Task<Category> UpdateCategory(int id, UpdateCategoryDTO updateCategoryDTO);
         Task<Category?> DeleteCategory(int id);
+        Task<bool> CategoryExit(int id);
     }
 }

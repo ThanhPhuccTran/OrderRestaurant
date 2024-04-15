@@ -90,9 +90,18 @@ namespace OrderRestaurant.Responsitory
             return updateFood;
         }
 
-        public Task<Food?> DeleteFood(int id)
+        public async Task<Food?> DeleteFood(int id)
         {
-            throw new NotImplementedException();
+            var model = await _context.Foods.FirstOrDefaultAsync(i=> i.FoodId==id);
+            if(model == null)
+            {
+                return null;
+
+            }
+            _context.Foods.Remove(model);
+            await _context.SaveChangesAsync();
+            return model;
         }
+
     }
 }

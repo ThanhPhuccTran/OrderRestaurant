@@ -12,12 +12,12 @@ namespace OrderRestaurant.Data
         [MaxLength(100)]
         public string NameFood { get; set; }
         [Required]
-        [Range(0, double.MaxValue)]
-        public double UnitPrice { get; set; }
+        public decimal UnitPrice { get; set; }
         [Required]
         public string UrlImage { get; set; }
-     
-        public int CategoryId { get; set; }
+
+         public int CategoryId { get; set; }
+         
         [ForeignKey("CategoryId")]
         public Category? Category { get; set; }
         public List<OrderDetails> OrderDetails { get; set; }

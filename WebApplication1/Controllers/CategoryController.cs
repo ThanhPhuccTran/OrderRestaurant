@@ -67,10 +67,10 @@ namespace OrderRestaurant.Controllers
         }
 
         [HttpDelete]
-        [Route("{id :int}")]
-        public async Task<IActionResult> DeleteCategory(int id)
+        [Route("{categoryid}")]
+        public async Task<IActionResult> DeleteCategory([FromRoute]int categoryid)
         {
-            var model = await _category.DeleteCategory(id);
+            var model = await _category.DeleteCategory(categoryid);
             if (model == null)
             {
                 return NotFound();

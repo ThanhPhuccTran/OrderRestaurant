@@ -21,6 +21,7 @@ namespace WebApplication1
 
             builder.Services.AddScoped<ICategory, CategoryResponsitory>();
             builder.Services.AddScoped<IFood, FoodResponsitory>();
+            builder.Services.AddScoped<ICustomer, CustomerResponsitory>();
 
             builder.Services.AddDbContext<ApplicationDBContext>(options =>
             {
