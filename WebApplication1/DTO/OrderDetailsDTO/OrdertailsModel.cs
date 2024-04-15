@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 
-namespace OrderRestaurant.Model
+namespace OrderRestaurant.DTO.OrderDetailsDTO
 {
     public class OrdertailsModel
     {
@@ -12,6 +12,6 @@ namespace OrderRestaurant.Model
         public string? Note { get; set; }
         public int FoodId { get; set; }
         public Food Food { get; set; }
-        
+
     }
 }

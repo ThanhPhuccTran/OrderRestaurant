@@ -50,8 +50,8 @@ namespace OrderRestaurant.Responsitory
                 return null;
             }
 
-            categoryupdate.TenLoai = updateCategoryDTO.TenLoai;
-
+            categoryupdate.CategoryName = updateCategoryDTO.CategoryName;
+            categoryupdate.Description = updateCategoryDTO.Description;
             await _context.SaveChangesAsync();
             return categoryupdate;
         }

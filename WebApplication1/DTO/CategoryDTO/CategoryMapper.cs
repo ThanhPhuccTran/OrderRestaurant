@@ -10,7 +10,9 @@ namespace OrderRestaurant.DTO.CategoryDTO
             return new CategoryModel
             {
                 CategoryId = model.CategoryId,
-                TenLoai = model.TenLoai
+                CategoryName = model.CategoryName,
+                Description = model.Description
+                
             };
         }
 
@@ -18,7 +20,8 @@ namespace OrderRestaurant.DTO.CategoryDTO
         {
             return new Category
             {
-                TenLoai = model.TenLoai
+                CategoryName = model.CategoryName,
+                Description = model.Description,
             };
         }
     }

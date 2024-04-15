@@ -26,4 +26,12 @@
     <Folder Include="wwwroot\images\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EditorConfigFiles Remove="C:\Users\ADMIN\Desktop\One day a little\Project\WebApplication1\WebApplication1\Migrations\.editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="C:\Users\ADMIN\Desktop\One day a little\Project\WebApplication1\WebApplication1\Migrations\.editorconfig" />
+  </ItemGroup>
+
 </Project>

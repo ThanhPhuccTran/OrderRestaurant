@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrderRestaurant.Data;
-using OrderRestaurant.Model;
+using OrderRestaurant.DTO.Cart;
 using OrderRestaurant.Service;
 using System;
 using System.Collections.Generic;
@@ -103,8 +103,8 @@ namespace OrderRestaurant.Controllers
             }
         }
         [HttpPost]
-        [Route("checkout")]
-        public async Task<IActionResult> Checkout(int customerId, int tableId, int? employeeId, string note)
+        [Route("confirm")]
+        public async Task<IActionResult> Confirm(int customerId, int tableId, int? employeeId, string note)
         {
             try
             {
@@ -128,7 +128,7 @@ namespace OrderRestaurant.Controllers
                 // Tạo đối tượng Order
                 var order = new Order
                 {
-                    CustormerId = customerId,
+                    CustomerId = customerId,
                     TableId = tableId,
                     EmployeeId = employeeId,
                     CreationTime = DateTime.Now,
@@ -172,7 +172,7 @@ namespace OrderRestaurant.Controllers
             }
         }
 
-        [HttpPut]
+       /* [HttpPut]
         [Route("update-order/{orderId}")]
         public IActionResult UpdateOrder(int orderId, [FromBody] OrderUpdateModel orderUpdateModel)
         {
@@ -212,7 +212,7 @@ namespace OrderRestaurant.Controllers
             {
                 return StatusCode(500, $"Lỗi: {ex.Message}");
             }
-        }
+        }*/
 
         [HttpPut]
         [Route("update-cart")]
