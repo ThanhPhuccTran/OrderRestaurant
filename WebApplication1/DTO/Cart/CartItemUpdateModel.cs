@@ -1,4 +1,4 @@
-﻿namespace OrderRestaurant.Model
+﻿namespace OrderRestaurant.DTO.Cart
 {
     public class CartItemUpdateModel
     {

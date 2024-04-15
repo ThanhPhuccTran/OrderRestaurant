@@ -10,7 +10,7 @@ namespace OrderRestaurant.DTO.OrderDetailsDTO
             return new OrderModel
             {
                 OrderId = model.OrderId,
-                CustormerId = model.CustormerId,
+                CustormerId = model.CustomerId,
                 TableId = model.TableId,
                 EmployeeId = model.EmployeeId.Value,
                 CreationTime = model.CreationTime.Value,

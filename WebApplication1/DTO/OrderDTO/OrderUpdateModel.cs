@@ -1,4 +1,6 @@
-﻿namespace OrderRestaurant.Model
+﻿using OrderRestaurant.DTO.OrderDetailsDTO;
+
+namespace OrderRestaurant.DTO.OrderDTO
 {
     public class OrderUpdateModel
     {

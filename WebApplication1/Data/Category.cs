@@ -10,8 +10,8 @@ namespace OrderRestaurant.Data
         public int CategoryId { get; set; }
         [Required]
         [MaxLength(100)]
-        public string TenLoai { get; set; } = string.Empty;
-
+        public string CategoryName { get; set; } = string.Empty;
+        public string? Description { get; set; }
         public List<Food> Foods { get; set; } 
     }
 }

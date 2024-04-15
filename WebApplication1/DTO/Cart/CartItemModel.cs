@@ -1,6 +1,6 @@
 ﻿using OrderRestaurant.Data;
 
-namespace OrderRestaurant.Model
+namespace OrderRestaurant.DTO.Cart
 {
     public class CartItemModel
     {
