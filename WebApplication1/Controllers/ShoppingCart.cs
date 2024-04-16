@@ -109,14 +109,12 @@ namespace OrderRestaurant.Controllers
         }
         [HttpPost]
         [Route("confirm")]
-        public async Task<IActionResult> Confirm(int customerId, int tableId, int? employeeId, string note)
+        public async Task<IActionResult> Confirm( int tableId, string note)
         {
             try
             {
                 // Kiểm tra tính hợp lệ của dữ liệu đầu vào
-                if (customerId <= 0)
-                    return BadRequest("Id khách hàng không hợp lệ");
-
+                
                 if (tableId <= 0)
                     return BadRequest("Id bàn không hợp lệ");
 
@@ -133,9 +131,9 @@ namespace OrderRestaurant.Controllers
                 // Tạo đối tượng Order
                 var order = new Order
                 {
-                    CustomerId = customerId,
+                    
                     TableId = tableId,
-                    EmployeeId = employeeId,
+                    
                     CreationTime = DateTime.Now,
                     Status = 1, // 0 là trạng thái chưa thanh toán
                     Note = note,

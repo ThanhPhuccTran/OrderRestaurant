@@ -96,7 +96,7 @@ namespace OrderRestaurant.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Food>> GetFood(int id)
+        public async Task<ActionResult<FoodModel>> GetFood(int id)
         {
             var food = await _foodRepository.GetFoodByIdAsync(id);
 

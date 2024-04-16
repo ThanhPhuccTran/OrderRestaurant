@@ -23,6 +23,8 @@ namespace WebApplication1
             builder.Services.AddScoped<IFood, FoodResponsitory>();
             builder.Services.AddScoped<ICustomer, CustomerResponsitory>();
             builder.Services.AddScoped<IEmployee, EmployeeResponsitory>();
+            builder.Services.AddScoped<ITable, TableResponsitory>();
+
             builder.Services.AddDbContext<ApplicationDBContext>(options =>
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
@@ -52,8 +54,8 @@ namespace WebApplication1
 
 
             var app = builder.Build();
+            app.UseCors("MyAllowSpecificOrigins");
 
-            
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

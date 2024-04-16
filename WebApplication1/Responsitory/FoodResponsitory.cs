@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.FoodDTO;
+using OrderRestaurant.Model;
 using OrderRestaurant.Service;
 
 namespace OrderRestaurant.Responsitory
@@ -14,7 +15,7 @@ namespace OrderRestaurant.Responsitory
         }
         public async Task<List<Food>> GetAllFoods()
         {
-            return await _context.Foods.ToListAsync();
+          return await _context.Foods.ToListAsync();
         }
         public async Task<Food> CreateFoodAsync(CreateFoodDTO food)
         {
@@ -50,9 +51,23 @@ namespace OrderRestaurant.Responsitory
             };
         }
 
-        public async Task<Food> GetFoodByIdAsync(int id)
+        public async Task<FoodModel> GetFoodByIdAsync(int id)
         {
-            return await _context.Foods.FindAsync(id);
+            var model = await _context.Foods
+        .Select(s => new FoodModel
+        {
+            FoodId = s.FoodId,
+            NameFood = s.NameFood,
+            UnitPrice = s.UnitPrice,
+            UrlImage = s.UrlImage,
+            CategoryId = s.CategoryId,
+            Category = _context.Categoies.FirstOrDefault(a => a.CategoryId == s.CategoryId)
+        })
+        .Where(a => a.FoodId == id)
+        .FirstOrDefaultAsync();
+
+            return model;
+
         }
 
         public Task<bool> FoodExits(int id)
@@ -63,7 +78,7 @@ namespace OrderRestaurant.Responsitory
         public async Task<Food> UpdateFood(int id, UpdateFoodDTO updateFoodDTO)
         {
             var updateFood = await _context.Foods.FirstOrDefaultAsync(hh => hh.FoodId == id);
-            if(updateFood == null)
+            if (updateFood == null)
             {
                 return null;
             }
@@ -85,15 +100,15 @@ namespace OrderRestaurant.Responsitory
             {
                 updateFood.UrlImage = "";
             }
-            
+
             await _context.SaveChangesAsync();
             return updateFood;
         }
 
         public async Task<Food?> DeleteFood(int id)
         {
-            var model = await _context.Foods.FirstOrDefaultAsync(i=> i.FoodId==id);
-            if(model == null)
+            var model = await _context.Foods.FirstOrDefaultAsync(i => i.FoodId == id);
+            if (model == null)
             {
                 return null;
 
