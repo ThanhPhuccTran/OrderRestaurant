@@ -14,7 +14,7 @@ namespace OrderRestaurant.DTO.FoodDTO
                 UnitPrice = model.UnitPrice,
                 UrlImage = model.UrlImage,
                 CategoryId = model.CategoryId,
-                
+
             };
         }
 

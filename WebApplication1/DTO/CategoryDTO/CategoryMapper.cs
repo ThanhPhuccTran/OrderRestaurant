@@ -1,5 +1,7 @@
 ﻿using OrderRestaurant.Data;
+using OrderRestaurant.DTO.FoodDTO;
 using OrderRestaurant.Model;
+using OrderRestaurant.Service;
 
 namespace OrderRestaurant.DTO.CategoryDTO
 {
@@ -11,8 +13,8 @@ namespace OrderRestaurant.DTO.CategoryDTO
             {
                 CategoryId = model.CategoryId,
                 CategoryName = model.CategoryName,
-                Description = model.Description
-                
+                Description = model.Description,
+               
             };
         }
 

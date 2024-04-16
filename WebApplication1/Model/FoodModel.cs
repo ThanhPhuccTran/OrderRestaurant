@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using OrderRestaurant.Data;
+using System.ComponentModel.DataAnnotations;
 
 namespace OrderRestaurant.Model
 {
@@ -8,6 +9,7 @@ namespace OrderRestaurant.Model
         public string NameFood { get; set; }
         public decimal UnitPrice { get; set; }   
         public string UrlImage { get; set; }
-        public int CategoryId { get; set; }
+        public int? CategoryId { get; set; }
+        public Category Category { get; set; }
     }
 }

@@ -22,7 +22,7 @@ namespace WebApplication1
             builder.Services.AddScoped<ICategory, CategoryResponsitory>();
             builder.Services.AddScoped<IFood, FoodResponsitory>();
             builder.Services.AddScoped<ICustomer, CustomerResponsitory>();
-
+            builder.Services.AddScoped<IEmployee, EmployeeResponsitory>();
             builder.Services.AddDbContext<ApplicationDBContext>(options =>
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
@@ -37,8 +37,20 @@ namespace WebApplication1
             });
 
             //dinh nghia ra nhung cai dia chi
-            builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
-           
+            /*builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));*/
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("MyAllowSpecificOrigins", builder =>
+                {
+                    builder
+                        .WithOrigins("https://localhost:7014", "http://localhost:5063")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
+
+
             var app = builder.Build();
 
             

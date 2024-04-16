@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.CategoryDTO;
 using OrderRestaurant.DTO.FoodDTO;
@@ -30,10 +31,22 @@ namespace OrderRestaurant.Controllers
             {
                 return BadRequest(ModelState);
             }
-            var model = await _foodRepository.GetAllFoods();
-            var list = model.Select(hh => hh.ToFoodDto());
-            var path = env.WebRootPath;
-            return Ok(new {list = list , path = path});
+            /* var model = await _foodRepository.GetAllFoods();
+             var list = model.Select(hh => hh.ToFoodDto());
+             var path = env.WebRootPath;*/
+            var model = _context.Foods.Select(s => new FoodModel
+            {
+                FoodId = s.FoodId,
+                NameFood = s.NameFood,
+                UnitPrice = s.UnitPrice,
+                UrlImage = s.UrlImage,
+                CategoryId = s.CategoryId,
+                Category = _context.Categoies.Where(a => a.CategoryId == s.CategoryId).FirstOrDefault(),
+
+            }).ToList();
+
+
+            return Ok(model);
         }
 
         [HttpPost("post-with-image")]
