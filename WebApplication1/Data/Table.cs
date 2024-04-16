@@ -11,5 +11,6 @@ namespace OrderRestaurant.Data
         public string TableName { get; set; }
         public int Status {  get; set; }
         public string Note { get; set; }
+        public List<Order> Orders { get; set; }
     }
 }

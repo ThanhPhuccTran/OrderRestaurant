@@ -4,7 +4,7 @@
     {
         public int OrderId { get; set; }
 
-        public int CustormerId { get; set; }
+        public int? CustormerId { get; set; }
 
         public int TableId { get; set; }
 
