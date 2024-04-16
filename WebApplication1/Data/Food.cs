@@ -16,7 +16,7 @@ namespace OrderRestaurant.Data
         [Required]
         public string UrlImage { get; set; }
 
-         public int CategoryId { get; set; }
+         public int? CategoryId { get; set; }
          
         [ForeignKey("CategoryId")]
         public Category? Category { get; set; }
