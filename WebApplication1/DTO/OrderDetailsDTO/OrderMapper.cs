@@ -18,7 +18,7 @@ namespace OrderRestaurant.DTO.OrderDetailsDTO
                 PaymentTime = model.PaymentTime.Value,
                 Pay = model.Pay.Value,
                 Note = model.Note,
-                Status = model.Status,
+                StatusId = model.StatusId,
             };
         }
     }

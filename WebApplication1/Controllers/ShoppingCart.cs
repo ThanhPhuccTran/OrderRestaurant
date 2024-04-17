@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using Newtonsoft.Json;
+using Microsoft.Extensions.Caching.Memory;
 namespace OrderRestaurant.Controllers
 {
     [Route("api/[controller]")]
@@ -17,13 +18,235 @@ namespace OrderRestaurant.Controllers
     {
         private readonly IFood _foodRepository;
         private readonly ApplicationDBContext _context;
-
-        public ShoppingCart(IFood foodRepository, ApplicationDBContext context)
+        private readonly IMemoryCache _cache;
+        public ShoppingCart(IFood foodRepository, ApplicationDBContext context,IMemoryCache cache)
         {
             _foodRepository = foodRepository;
             _context = context;
+            _cache = cache;
+        }
+        //Cache
+        [HttpPost]
+        [Route("add-food-cache")]
+        public async Task<IActionResult> AddFoodToOrderCache([FromBody]int foodId)
+        {
+            try
+            {
+                // Lấy thông tin món đồ ăn từ cơ sở dữ liệu
+                var foodToAdd = await _context.Foods.FindAsync(foodId);
+                if (foodToAdd == null)
+                {
+                    return NotFound("Món đồ ăn không tồn tại");
+                }
+
+                // Kiểm tra xem giỏ hàng có tồn tại trong cache không
+                List<CartItemModel> cartItems;
+                if (!_cache.TryGetValue("CartItems", out cartItems))
+                {
+                    cartItems = new List<CartItemModel>();
+                }
+
+                // Thêm hoặc cập nhật thông tin món ăn vào giỏ hàng
+                var existingCartItem = cartItems.FirstOrDefault(item => item.foods.FoodId == foodId);
+                if (existingCartItem != null)
+                {
+                    existingCartItem.Quantity++;
+                }
+                else
+                {
+                    cartItems.Add(new CartItemModel
+                    {
+                        foods = foodToAdd,
+                        Quantity = 1
+                    });
+                }
+
+                // Lưu thông tin giỏ hàng vào cache
+                _cache.Set("CartItems", cartItems);
+
+                return Ok("Món đã được thêm vào giỏ hàng");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
         }
 
+
+        [HttpGet]
+        [Route("get-cart-items-cache")]
+        public IActionResult GetCartItems()
+        {
+            try
+            {
+                // Kiểm tra xem giỏ hàng có tồn tại trong cache không
+                List<CartItemModel> cartItems;
+                if (!_cache.TryGetValue("CartItems", out cartItems))
+                {
+                    cartItems = new List<CartItemModel>();
+                }
+
+                return Ok(cartItems);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
+        }
+
+        [HttpPut]
+        [Route("update-cart-item-cache")]
+        public IActionResult UpdateCartItem(int foodId, int quantity)
+        {
+            try
+            {
+                // Kiểm tra xem giỏ hàng có tồn tại trong cache không
+                List<CartItemModel> cartItems;
+                if (!_cache.TryGetValue("CartItems", out cartItems))
+                {
+                    cartItems = new List<CartItemModel>();
+                    return BadRequest("Giỏ hàng trống");
+                }
+
+                // Tìm kiếm món ăn trong giỏ hàng
+                var cartItemToUpdate = cartItems.FirstOrDefault(item => item.foods.FoodId == foodId);
+                if (cartItemToUpdate == null)
+                {
+                    return NotFound("Món không tồn tại trong giỏ hàng");
+                }
+
+                // Cập nhật số lượng món ăn
+                cartItemToUpdate.Quantity = quantity;
+
+                // Lưu lại thông tin giỏ hàng đã được cập nhật vào cache
+                _cache.Set("CartItems", cartItems);
+
+                return Ok("Cập nhật giỏ hàng thành công");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
+        }
+
+
+        [HttpDelete]
+        [Route("remove-cart-item")]
+        public IActionResult RemoveCartItem(int foodId)
+        {
+            try
+            {
+                // Kiểm tra xem giỏ hàng có tồn tại trong cache không
+                List<CartItemModel> cartItems;
+                if (!_cache.TryGetValue("CartItems", out cartItems))
+                {
+                    cartItems = new List<CartItemModel>();
+                    return BadRequest("Giỏ hàng trống");
+                }
+
+                // Tìm kiếm và xóa sản phẩm khỏi giỏ hàng
+                var itemToRemove = cartItems.FirstOrDefault(item => item.foods.FoodId == foodId);
+                if (itemToRemove == null)
+                {
+                    return NotFound("Món không tồn tại trong giỏ hàng");
+                }
+
+                cartItems.Remove(itemToRemove);
+
+                // Lưu lại thông tin giỏ hàng đã được cập nhật vào cache
+                _cache.Set("CartItems", cartItems);
+
+                return Ok("Đã xóa món khỏi giỏ hàng");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
+        }
+
+        [HttpDelete]
+        [Route("clear-cart-cache")]
+        public IActionResult ClearCartCache()
+        {
+            try
+            {
+                // Xóa tất cả các món khỏi giỏ hàng trong cache
+                _cache.Remove("CartItems");
+
+                return Ok("Đã xóa tất cả các món khỏi giỏ hàng");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
+        }
+
+        [HttpPost]
+        [Route("confirm-cache")]
+        public async Task<IActionResult> ConfirmCache(int tableId, string note)
+        {
+            try
+            {
+                // Kiểm tra tính hợp lệ của dữ liệu đầu vào
+                if (tableId <= 0)
+                    return BadRequest("Id bàn không hợp lệ");
+
+                // Lấy thông tin giỏ hàng từ cache
+                List<CartItemModel> cartItems;
+                if (!_cache.TryGetValue("CartItems", out cartItems))
+                {
+                    return BadRequest("Giỏ hàng trống");
+                }
+
+                // Tạo đối tượng Order
+                var order = new Order
+                {
+                    TableId = tableId,
+                    CreationTime = DateTime.Now,
+                    StatusId = 1, // 0 là trạng thái chưa thanh toán
+                    Note = note,
+                    OrderDetails = new List<OrderDetails>()
+                };
+
+                // Tính tổng tiền cho đơn hàng và tạo các chi tiết đơn hàng
+                decimal totalAmount = 0;
+                foreach (var item in cartItems)
+                {
+                    var food = await _context.Foods.FindAsync(item.foods.FoodId);
+                    if (food == null)
+                        return BadRequest($"Món ăn với id {item.foods.FoodId} không tồn tại");
+                    totalAmount += (decimal)(item.Quantity * food.UnitPrice);
+                    var orderDetail = new OrderDetails
+                    {
+                        Quantity = item.Quantity,
+                        UnitPrice = food.UnitPrice,
+                        Note = note,
+                        TotalAmount = totalAmount,
+                        FoodId = food.FoodId
+                    };
+                    order.OrderDetails.Add(orderDetail);
+
+                    
+                }
+
+                // Lưu đơn hàng và chi tiết đơn hàng vào cơ sở dữ liệu
+                _context.Orders.Add(order);
+                await _context.SaveChangesAsync();
+
+                // Xóa giỏ hàng sau khi đã checkout thành công
+                _cache.Remove("CartItems");
+
+                return Ok("Checkout thành công");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
+        }
+
+
+
+        // Session
         [HttpPost]
         [Route("add-food")]
         public async Task<IActionResult> AddFoodToOrder(int foodId)
@@ -135,7 +358,7 @@ namespace OrderRestaurant.Controllers
                     TableId = tableId,
                     
                     CreationTime = DateTime.Now,
-                    Status = 1, // 0 là trạng thái chưa thanh toán
+                    StatusId = 1, // 0 là trạng thái chưa thanh toán
                     Note = note,
                     OrderDetails = new List<OrderDetails>()
                 };

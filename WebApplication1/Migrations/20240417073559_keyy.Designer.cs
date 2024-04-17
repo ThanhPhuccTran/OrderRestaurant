@@ -12,8 +12,8 @@ using OrderRestaurant.Data;
 namespace OrderRestaurant.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20240415150143_tonight1")]
-    partial class tonight1
+    [Migration("20240417073559_keyy")]
+    partial class keyy
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -115,11 +115,10 @@ namespace OrderRestaurant.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<decimal>("UnitPrice")
+                    b.Property<decimal?>("UnitPrice")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("UrlImage")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("FoodId");
@@ -127,6 +126,23 @@ namespace OrderRestaurant.Migrations
                     b.HasIndex("CategoryId");
 
                     b.ToTable("Food");
+                });
+
+            modelBuilder.Entity("OrderRestaurant.Data.ManageStatus", b =>
+                {
+                    b.Property<int>("StatusId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StatusId"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("StatusId");
+
+                    b.ToTable("ManageStatus");
                 });
 
             modelBuilder.Entity("OrderRestaurant.Data.Order", b =>
@@ -140,7 +156,7 @@ namespace OrderRestaurant.Migrations
                     b.Property<DateTime?>("CreationTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("CustomerId")
+                    b.Property<int?>("CustomerId")
                         .HasColumnType("int");
 
                     b.Property<int?>("EmployeeId")
@@ -158,7 +174,7 @@ namespace OrderRestaurant.Migrations
                     b.Property<DateTime?>("ReceivingTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("Status")
+                    b.Property<int>("StatusId")
                         .HasColumnType("int");
 
                     b.Property<int>("TableId")
@@ -169,6 +185,10 @@ namespace OrderRestaurant.Migrations
                     b.HasIndex("CustomerId");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("StatusId");
+
+                    b.HasIndex("TableId");
 
                     b.ToTable("Order");
                 });
@@ -187,7 +207,11 @@ namespace OrderRestaurant.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("UnitPrice")
+                    b.Property<decimal?>("TotalAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("UnitPrice")
+                        .IsRequired()
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("OrderId", "FoodId");
@@ -209,7 +233,10 @@ namespace OrderRestaurant.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Status")
+                    b.Property<string>("QR_id")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StatusId")
                         .HasColumnType("int");
 
                     b.Property<string>("TableName")
@@ -217,6 +244,8 @@ namespace OrderRestaurant.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("TableId");
+
+                    b.HasIndex("StatusId");
 
                     b.ToTable("Table");
                 });
@@ -234,17 +263,31 @@ namespace OrderRestaurant.Migrations
                 {
                     b.HasOne("OrderRestaurant.Data.Customer", "Customers")
                         .WithMany("Orders")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("CustomerId");
 
                     b.HasOne("OrderRestaurant.Data.Employee", "Employees")
                         .WithMany("Orders")
                         .HasForeignKey("EmployeeId");
 
+                    b.HasOne("OrderRestaurant.Data.ManageStatus", "Statuss")
+                        .WithMany("Orders")
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OrderRestaurant.Data.Table", "Tables")
+                        .WithMany("Orders")
+                        .HasForeignKey("TableId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Customers");
 
                     b.Navigation("Employees");
+
+                    b.Navigation("Statuss");
+
+                    b.Navigation("Tables");
                 });
 
             modelBuilder.Entity("OrderRestaurant.Data.OrderDetails", b =>
@@ -264,6 +307,17 @@ namespace OrderRestaurant.Migrations
                     b.Navigation("Food");
 
                     b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("OrderRestaurant.Data.Table", b =>
+                {
+                    b.HasOne("OrderRestaurant.Data.ManageStatus", "Statuss")
+                        .WithMany("Tables")
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Statuss");
                 });
 
             modelBuilder.Entity("OrderRestaurant.Data.Category", b =>
@@ -286,9 +340,21 @@ namespace OrderRestaurant.Migrations
                     b.Navigation("OrderDetails");
                 });
 
+            modelBuilder.Entity("OrderRestaurant.Data.ManageStatus", b =>
+                {
+                    b.Navigation("Orders");
+
+                    b.Navigation("Tables");
+                });
+
             modelBuilder.Entity("OrderRestaurant.Data.Order", b =>
                 {
                     b.Navigation("OrderDetails");
+                });
+
+            modelBuilder.Entity("OrderRestaurant.Data.Table", b =>
+                {
+                    b.Navigation("Orders");
                 });
 #pragma warning restore 612, 618
         }
