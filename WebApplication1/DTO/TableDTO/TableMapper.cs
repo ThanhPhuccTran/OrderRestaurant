@@ -11,20 +11,33 @@ namespace OrderRestaurant.DTO.TableDTO
             {
                 TableId = table.TableId,
                 TableName = table.TableName,
-                Status = table.Status,
+                StatusId = table.StatusId,
                 Note = table.Note,
+                QR_id = table.QR_id,
                 
             };
         }
 
         public static Table ToTableFromCreate(this CreateTableDTO table)
         {
+            string qrId = null;
+            if (table.QR_id != null)
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    table.QR_id.CopyTo(memoryStream);
+                    qrId = Convert.ToBase64String(memoryStream.ToArray());
+                }
+            }
+
             return new Table
             {
                 TableName = table.TableName,
-                Status = 8, //set trạng thái trống
+                StatusId = 8, //set trạng thái trống
                 Note = table.Note,
+                QR_id = qrId
             };
         }
+
     }
 }

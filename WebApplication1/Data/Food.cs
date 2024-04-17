@@ -8,13 +8,13 @@ namespace OrderRestaurant.Data
     {
         [Key]
         public int FoodId { get; set; }
-        [Required]
+        
         [MaxLength(100)]
         public string NameFood { get; set; }
-        [Required]
-        public decimal UnitPrice { get; set; }
-        [Required]
-        public string UrlImage { get; set; }
+        
+        public decimal? UnitPrice { get; set; }
+       
+        public string? UrlImage { get; set; }
 
          public int? CategoryId { get; set; }
          

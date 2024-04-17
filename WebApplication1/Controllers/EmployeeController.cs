@@ -53,7 +53,7 @@ namespace OrderRestaurant.Controllers
             }
             var model = await _employee.GetEmployees();
             var list = model.Select(hh => hh.ToEmployeeDto());
-            return Ok(new { list = list });
+            return Ok(list );
         }
         [HttpGet("{id}")]
         public async Task<ActionResult<Employee>> GetEmployee(int id)

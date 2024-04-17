@@ -52,7 +52,7 @@ namespace OrderRestaurant.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateTable([FromBody] CreateTableDTO createTable)
+        public async Task<IActionResult> CreateTable([FromForm] CreateTableDTO createTable)
         {
             var model = createTable.ToTableFromCreate();
             await _table.CreateTable(model);

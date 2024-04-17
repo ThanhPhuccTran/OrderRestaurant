@@ -13,10 +13,11 @@ namespace OrderRestaurant.Data
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Table> Tables { get; set; }
+        public DbSet<ManageStatus> Statuss { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<OrderDetails>()
-            .HasKey(ba => new { ba.OrderId,ba.FoodId });
+            .HasKey(ba => new { ba.OrderId, ba.FoodId });
 
             modelBuilder.Entity<OrderDetails>()
                 .HasOne(ba => ba.Order)
@@ -27,6 +28,13 @@ namespace OrderRestaurant.Data
                 .HasOne(ba => ba.Food)
                 .WithMany(a => a.OrderDetails)
                 .HasForeignKey(ba => ba.FoodId);
-        } 
+
+            modelBuilder.Entity<Order>()
+        .HasOne(o => o.Tables)
+        .WithMany(t => t.Orders)
+        .HasForeignKey(o => o.TableId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+        }
     }
 }

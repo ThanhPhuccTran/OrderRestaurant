@@ -57,7 +57,7 @@ namespace OrderRestaurant.Responsitory
             }
             tableUpdate.TableName = tableDTO.TableName;
             tableUpdate.Note = tableDTO.Note;
-            tableUpdate.Status = tableDTO.Status;
+            tableUpdate.StatusId = tableDTO.Status;
             await _dbContext.SaveChangesAsync();
             return tableUpdate;
         }

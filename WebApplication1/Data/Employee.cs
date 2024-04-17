@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace OrderRestaurant.Data
 {
     [Table("Employee")]
-    public class Employee
+    public partial class Employee
     {
         [Key]
         public int EmployeeId { get; set; }

@@ -24,6 +24,7 @@ namespace WebApplication1
             builder.Services.AddScoped<ICustomer, CustomerResponsitory>();
             builder.Services.AddScoped<IEmployee, EmployeeResponsitory>();
             builder.Services.AddScoped<ITable, TableResponsitory>();
+            builder.Services.AddScoped<IOrder, OrderResponsitory>();
 
             builder.Services.AddDbContext<ApplicationDBContext>(options =>
             {
@@ -31,6 +32,7 @@ namespace WebApplication1
             });
             // Thêm dịch vụ Session
             builder.Services.AddDistributedMemoryCache(); // Sử dụng cache bộ nhớ phân tán (cho mục đích demo)
+            builder.Services.AddMemoryCache();
             builder.Services.AddSession(options =>
             {
                 options.IdleTimeout = TimeSpan.FromMinutes(30); // Thiết lập thời gian timeout cho session
