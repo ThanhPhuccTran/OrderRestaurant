@@ -7,7 +7,7 @@ namespace OrderRestaurant.Service
 {
     public interface IFood
     {
-        Task<(int totalItems,int totalPages,List<Food> foods)> GetSearchFood(QuerryObject querry, string search = "");
+        Task<(int totalItems,int totalPages,List<Food> foods)> GetSearchFood(QuerryFood querry, string search = "");
         Task<Food> CreateFoodAsync(CreateFoodDTO food);
         Task<FoodModel> GetFoodByIdAsync(int id);
         Task<List<Food>> GetAllFoods();

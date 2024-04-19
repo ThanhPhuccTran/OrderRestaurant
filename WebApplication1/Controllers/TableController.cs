@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.TableDTO;
+using OrderRestaurant.Helpers;
 using OrderRestaurant.Service;
 
 namespace OrderRestaurant.Controllers
@@ -18,6 +19,28 @@ namespace OrderRestaurant.Controllers
             _context = context;
             _table = table;
         }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery] QuerryObject querry, string search = "")
+        {
+            if (querry.PageNumber <= 0 || querry.PageSize <= 0)
+            {
+                return BadRequest("Không hợp lệ");
+            }
+            var (totalItems, totalPages, tables) = await _table.GetSearch(querry, search);
+            if (totalItems == 0)
+            {
+                return NotFound("Không tìm thấy kết quả");
+            }
+            var response = new
+            {
+                TotalItems = totalItems,
+                TotalPages = totalPages,
+                Tables = tables,
+            };
+            return Ok(response);
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetTableAll()
         {
@@ -77,6 +100,10 @@ namespace OrderRestaurant.Controllers
             if (updateTableDTO.TableName != null && updateTableDTO.TableName.Trim() == "")
             {
                 return BadRequest("Tên không được để trống");
+            }
+            if(updateTableDTO.QR_id == null)
+            {
+                return BadRequest("Mã QR không được để trống");
             }
 
             var model = await _table.UpdateTable(id, updateTableDTO);
