@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.FoodDTO;
+using OrderRestaurant.Helpers;
 using OrderRestaurant.Model;
 using OrderRestaurant.Service;
 
@@ -116,6 +117,34 @@ namespace OrderRestaurant.Responsitory
             _context.Foods.Remove(model);
             await _context.SaveChangesAsync();
             return model;
+        }
+
+        public async Task<List<Food>> GetSearchFood(QuerryObject querry, string search = "")
+        {
+            var query = _context.Foods
+                .Include(f => f.Category)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(f => EF.Functions.Like(f.NameFood, $"%{search}%"));
+            }
+            var skipNumber = (querry.PageNumber - 1) * querry.PageSize;
+            var foods = await query
+                .Select(f => new Food
+                {
+                    FoodId = f.FoodId,
+                    NameFood = f.NameFood,
+                    UnitPrice = f.UnitPrice,
+                    UrlImage = f.UrlImage,
+                    CategoryId = f.CategoryId,
+                    Category = f.Category
+                })
+                .Skip(skipNumber)
+                .Take(querry.PageSize)
+                .ToListAsync();
+
+            return foods;
         }
 
     }

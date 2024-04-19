@@ -29,12 +29,12 @@ namespace OrderRestaurant.DTO.TableDTO
                     qrId = Convert.ToBase64String(memoryStream.ToArray());
                 }
             }
-
+            string note = string.IsNullOrWhiteSpace(table.Note) ? "" : table.Note;
             return new Table
             {
                 TableName = table.TableName,
                 StatusId = 8, //set trạng thái trống
-                Note = table.Note,
+                Note = note,
                 QR_id = qrId
             };
         }
