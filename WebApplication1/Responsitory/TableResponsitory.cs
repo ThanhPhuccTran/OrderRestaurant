@@ -50,14 +50,30 @@ namespace OrderRestaurant.Responsitory
 
         public async Task<Table> UpdateTable(int id, UpdateTableDTO tableDTO)
         {
+            
             var tableUpdate = await _dbContext.Tables.FirstOrDefaultAsync(hh=>hh.TableId == id);
             if(tableUpdate == null)
             {
                 return null;
             }
+            string note = string.IsNullOrWhiteSpace(tableDTO.Note) ? "" : tableDTO.Note;
             tableUpdate.TableName = tableDTO.TableName;
-            tableUpdate.Note = tableDTO.Note;
-            tableUpdate.StatusId = tableDTO.Status;
+            tableUpdate.Note = note;
+            tableUpdate.StatusId = tableDTO.StatusId;
+            if (tableDTO.QR_id.Length > 0)
+            {
+                using (var ms = new MemoryStream())
+                {
+                    tableDTO.QR_id.CopyTo(ms);
+                    var imageBytes = ms.ToArray();
+                    var base64String = Convert.ToBase64String(imageBytes);
+                    tableUpdate.QR_id = base64String;
+                }
+            }
+            else
+            {
+                tableUpdate.QR_id = "";
+            }
             await _dbContext.SaveChangesAsync();
             return tableUpdate;
         }

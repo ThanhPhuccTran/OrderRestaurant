@@ -55,11 +55,15 @@ namespace OrderRestaurant.Controllers
         public async Task<IActionResult> CreateTable([FromForm] CreateTableDTO? createTable)
         {
             var model = createTable.ToTableFromCreate();
+            if(model == null)
+            {
+                return BadRequest("Bắt buộc bạn phải nhập ảnh");
+            }
             await _table.CreateTable(model);
             return CreatedAtAction(nameof(GetTableById),new {id = model.TableId},model.ToTableDto());
         }
 
-        [HttpPatch]
+        [HttpPut]
         [Route("{id:int}")]
         public async Task<IActionResult> UpdateTable([FromRoute] int id, [FromForm] UpdateTableDTO updateTableDTO)
         {
