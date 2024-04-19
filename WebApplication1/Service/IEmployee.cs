@@ -1,5 +1,6 @@
 ﻿using OrderRestaurant.Data;
 using OrderRestaurant.DTO.EmployeeDTO;
+using OrderRestaurant.Helpers;
 
 namespace OrderRestaurant.Service
 {
@@ -11,5 +12,6 @@ namespace OrderRestaurant.Service
         Task<Employee> UpdateEmployee(int id, CreateEmployeeDTO updateEmployeeDTO);
         Task<Employee?> DeleteEmployee(int id);
         Task<bool> EmployeeExits(int id);
+        Task<(int totalItems, int totalPages, List<Employee> lstemployee)> GetSearchEmployee(QuerryObject querry, string search = "");
     }
 }

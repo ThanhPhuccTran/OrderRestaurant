@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.CategoryDTO;
+using OrderRestaurant.Helpers;
 using OrderRestaurant.Service;
 
 namespace OrderRestaurant.Controllers
@@ -18,6 +19,29 @@ namespace OrderRestaurant.Controllers
             _context = context;
             _category = category;
         }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery] QuerryObject querry, string search = "")
+        {
+            if (querry.PageNumber <= 0 || querry.PageSize <= 0)
+            {
+                return BadRequest("Không hợp lệ");
+            }
+            var (totalItems, totalPages, category) = await _category.GetSearch(querry, search);
+            if (totalItems == 0)
+            {
+                return NotFound("Không tìm thấy kết quả");
+            }
+            var response = new
+            {
+                TotalItems = totalItems,
+                TotalPages = totalPages,
+                Category = category
+            };
+            return Ok(response);
+        }
+
+
         [HttpGet]
         public async Task<IActionResult> GetCategoryAll()
         {

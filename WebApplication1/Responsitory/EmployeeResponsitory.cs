@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.EmployeeDTO;
+using OrderRestaurant.Helpers;
 using OrderRestaurant.Service;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace OrderRestaurant.Responsitory
 {
@@ -42,6 +44,34 @@ namespace OrderRestaurant.Responsitory
         public async Task<List<Employee>> GetEmployees()
         {
             return await _dbContext.Employees.ToListAsync();
+        }
+
+        public async Task<(int totalItems, int totalPages, List<Employee> lstemployee)> GetSearchEmployee(QuerryObject querry, string search = "")
+        {
+            var list = _dbContext.Employees.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                list = list.Where(f => EF.Functions.Like(f.EmployeeName, $"%{search}%"));
+            }
+            var totalItems = await list.CountAsync(); // Số lượng sản phẩm tìm kiếm được
+            var totalPages = (int)Math.Ceiling((double)totalItems / querry.PageSize); // Số trang
+            var skipNumber = (querry.PageNumber - 1) * querry.PageSize;
+
+            var employees = await list.Select(f => new Employee
+            {
+                EmployeeId = f.EmployeeId,
+                EmployeeName = f.EmployeeName,
+                Image = f.Image,
+                Phone = f.Phone,
+                Email = f.Email,
+                Password = f.Password
+
+
+            })
+                .Skip(skipNumber)
+                .Take(querry.PageSize)
+                .ToListAsync();
+            return (totalItems, totalPages, employees);
         }
 
         public async Task<Employee> UpdateEmployee(int id, CreateEmployeeDTO updateEmployeeDTO)

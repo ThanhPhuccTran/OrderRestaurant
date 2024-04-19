@@ -119,7 +119,7 @@ namespace OrderRestaurant.Responsitory
             return model;
         }
 
-        public async Task<(int totalItems, int totalPages, List<Food> foods)> GetSearchFood(QuerryObject querry, string search = "")
+        public async Task<(int totalItems, int totalPages, List<Food> foods)> GetSearchFood(QuerryFood querry, string search = "")
         {
             var query = _context.Foods
                 .Include(f => f.Category)

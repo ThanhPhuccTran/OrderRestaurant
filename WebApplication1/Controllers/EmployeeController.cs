@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Client;
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.EmployeeDTO;
+using OrderRestaurant.Helpers;
 using OrderRestaurant.Service;
 
 namespace OrderRestaurant.Controllers
@@ -18,6 +19,26 @@ namespace OrderRestaurant.Controllers
             _context = context;
             _employee = employee;
 
+        }
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery] QuerryObject querry , string search = "")
+        {
+            if(querry.PageNumber <=0 || querry.PageSize <= 0)
+            {
+                return BadRequest("Không hợp lệ");
+            }
+            var (totalItems, totalPages, employee) = await _employee.GetSearchEmployee(querry,search);
+            if (totalItems == 0)
+            {
+                return NotFound("Không tìm thấy kết quả");
+            }
+            var response = new
+            {
+                TotalItems = totalItems,
+                TotalPages = totalPages,
+                Employees = employee
+            };
+            return Ok(response);
         }
         [HttpPost("postEmployee")]
         public async Task<IActionResult> CreateEmployeeImage([FromForm] CreateEmployeeDTO p)

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.TableDTO;
+using OrderRestaurant.Helpers;
 using OrderRestaurant.Service;
 
 namespace OrderRestaurant.Responsitory
@@ -36,6 +37,34 @@ namespace OrderRestaurant.Responsitory
         public async Task<List<Table>> GetAllTable()
         {
             return await _dbContext.Tables.ToListAsync();
+        }
+
+        public async Task<(int totalItems, int totalPages, List<Table> tables)> GetSearch(QuerryObject querry, string search = "")
+        {
+            var list = _dbContext.Tables.Include(f=>f.Statuss).AsQueryable();
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                list = list.Where(f => EF.Functions.Like(f.TableName, $"%{search}%"));
+
+            }
+            var totalItems = await list.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalItems / querry.PageSize);
+            var skipNumber = (querry.PageNumber - 1) * querry.PageSize;
+
+            var table = await list.Select(f => new Table
+            {
+                TableId = f.TableId,
+                TableName = f.TableName,
+                Note = f.Note,
+                QR_id = f.QR_id,
+                StatusId = f.StatusId,
+                Statuss = f.Statuss
+
+
+            }).Skip(skipNumber)
+                .Take(querry.PageSize)
+                .ToListAsync();
+            return (totalItems, totalPages, table);
         }
 
         public async Task<Table?> GetTableById(int tableId)

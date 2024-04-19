@@ -26,24 +26,27 @@ namespace OrderRestaurant.Controllers
             this.env = env;
             _categoryRespository = categoryRespository;
         }
-
-        //Phân trang và tìm kiếm 
+        //https://localhost:7014/api/Food/search
+        //Phân trang và tìm kiếm , tìm kiếm theo giá asc desc , tìm theo category
         [HttpGet("search")]
-        public async Task<IActionResult> Search([FromQuery] QuerryObject querry, string search = "")
+        public async Task<IActionResult> Search([FromQuery] QuerryFood querry, string search = "")
         {
             var (totalItems, totalPages, foods) = await _foodRepository.GetSearchFood(querry, search);
 
-            // Tạo một đối tượng phản hồi chứa thông tin về số lượng sản phẩm, số trang và danh sách sản phẩm
+            if(totalItems == 0)
+            {
+                return NotFound("Không tìm thấy kết quả");
+            }
             var response = new
             {
-                TotalItems = totalItems,
-                TotalPages = totalPages,
-                Foods = foods // Sử dụng danh sách foods trực tiếp
+                TotalItems = totalItems, // Số lượng hiện có 
+                TotalPages = totalPages, // Tổng trang
+                Foods = foods  // list danh sách
             };
 
             return Ok(response);
         }
-
+        // https://localhost:7014/api/Food
         [HttpGet]
         public async Task<IActionResult> GetFoodAll()
         {
@@ -68,7 +71,7 @@ namespace OrderRestaurant.Controllers
 
             return Ok(model);
         }
-
+        // https://localhost:7014/api/Food/post-with-image
         [HttpPost("post-with-image")]
         
         public async Task<IActionResult> CreateFoodImage([FromForm]FoodImage p)
@@ -102,6 +105,7 @@ namespace OrderRestaurant.Controllers
 
             return Ok(new { message = "Thành công", food = food, imageUrl = imageUrl });
         }
+
         [HttpPost]
         public async Task<ActionResult<Food>> CreateFood([FromForm] CreateFoodDTO foodDTO)
         {
@@ -114,7 +118,7 @@ namespace OrderRestaurant.Controllers
 
             return CreatedAtAction(nameof(GetFood), new { id = createdFood.FoodId }, createdFood);
         }
-
+        //https://localhost:7014/api/Food/1
         [HttpGet("{id}")]
         public async Task<ActionResult<FoodModel>> GetFood(int id)
         {
@@ -127,6 +131,7 @@ namespace OrderRestaurant.Controllers
 
             return food;
         }
+
         [HttpPut]
         [Route("{id}")]
         public async Task<IActionResult> UpdateFood([FromRoute] int id, [FromForm] UpdateFoodDTO updateFood)

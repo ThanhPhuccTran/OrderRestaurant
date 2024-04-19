@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.CategoryDTO;
+using OrderRestaurant.Helpers;
 using OrderRestaurant.Service;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace OrderRestaurant.Responsitory
 {
@@ -42,11 +44,34 @@ namespace OrderRestaurant.Responsitory
             return await _context.Categoies.FindAsync(id);
         }
 
+        public async Task<(int totalItems, int totalPages, List<Category> category)> GetSearch(QuerryObject querry, string search = "")
+        {
+            var list = _context.Categoies.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                list = list.Where(f => EF.Functions.Like(f.CategoryName, $"%{search}%"));
+
+            }
+            var totalItems = await list.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalItems / querry.PageSize);
+            var skipNumber = (querry.PageNumber - 1) * querry.PageSize;
+
+            var categories = await list.Select(f => new Category 
+            {
+                CategoryId = f.CategoryId,
+                CategoryName = f.CategoryName,
+                Description = f.Description,
+                
+            
+            })  .Skip(skipNumber)
+                .Take(querry.PageSize)
+                .ToListAsync();
+            return (totalItems, totalPages, categories);
+        }
         public async Task<List<Category>> GetCategoryFoods()
         {
             return await _context.Categoies.ToListAsync();
         }
-
         public async Task<Category> UpdateCategory(int id, UpdateCategoryDTO updateCategoryDTO)
         {
             var categoryupdate = await _context.Categoies.FirstOrDefaultAsync(hh => hh.CategoryId == id);
