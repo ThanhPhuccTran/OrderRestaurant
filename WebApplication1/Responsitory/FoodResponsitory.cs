@@ -119,7 +119,7 @@ namespace OrderRestaurant.Responsitory
             return model;
         }
 
-        public async Task<List<Food>> GetSearchFood(QuerryObject querry, string search = "")
+        public async Task<(int totalItems, int totalPages, List<Food> foods)> GetSearchFood(QuerryObject querry, string search = "")
         {
             var query = _context.Foods
                 .Include(f => f.Category)
@@ -129,6 +129,23 @@ namespace OrderRestaurant.Responsitory
             {
                 query = query.Where(f => EF.Functions.Like(f.NameFood, $"%{search}%"));
             }
+            if (querry.CategoryId != null)
+            {
+                query = query.Where(s => s.CategoryId == querry.CategoryId);
+            }
+            if (!string.IsNullOrWhiteSpace(querry.SortBy))
+            {
+                if (querry.SortBy.Equals("GiamDan", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.OrderByDescending(s => s.UnitPrice);
+                }
+                else if (querry.SortBy.Equals("TangDan", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.OrderBy(s => s.UnitPrice);
+                }
+            }
+            var totalItems = await query.CountAsync(); // Số lượng sản phẩm tìm kiếm được
+            var totalPages = (int)Math.Ceiling((double)totalItems / querry.PageSize); // Số trang
             var skipNumber = (querry.PageNumber - 1) * querry.PageSize;
             var foods = await query
                 .Select(f => new Food
@@ -144,7 +161,7 @@ namespace OrderRestaurant.Responsitory
                 .Take(querry.PageSize)
                 .ToListAsync();
 
-            return foods;
+            return (totalItems, totalPages, foods);
         }
 
     }

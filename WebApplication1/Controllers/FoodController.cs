@@ -29,12 +29,21 @@ namespace OrderRestaurant.Controllers
 
         //Phân trang và tìm kiếm 
         [HttpGet("search")]
-        public async Task<IActionResult> Search([FromQuery] QuerryObject querry ,string search = "")
+        public async Task<IActionResult> Search([FromQuery] QuerryObject querry, string search = "")
         {
-            var food = await _foodRepository.GetSearchFood(querry,search);
-            var list = food.Select(hh => hh.ToFoodDto());
-            return Ok(food);
+            var (totalItems, totalPages, foods) = await _foodRepository.GetSearchFood(querry, search);
+
+            // Tạo một đối tượng phản hồi chứa thông tin về số lượng sản phẩm, số trang và danh sách sản phẩm
+            var response = new
+            {
+                TotalItems = totalItems,
+                TotalPages = totalPages,
+                Foods = foods // Sử dụng danh sách foods trực tiếp
+            };
+
+            return Ok(response);
         }
+
         [HttpGet]
         public async Task<IActionResult> GetFoodAll()
         {

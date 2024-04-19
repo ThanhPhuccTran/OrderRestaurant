@@ -20,24 +20,29 @@ namespace OrderRestaurant.DTO.TableDTO
 
         public static Table ToTableFromCreate(this CreateTableDTO table)
         {
-            string qrId = null;
-            if (table.QR_id != null)
+            if (table.QR_id == null || table.QR_id.Length == 0)
             {
-                using (var memoryStream = new MemoryStream())
-                {
-                    table.QR_id.CopyTo(memoryStream);
-                    qrId = Convert.ToBase64String(memoryStream.ToArray());
-                }
+                return null;
             }
+
+            string qrId;
+            using (var memoryStream = new MemoryStream())
+            {
+                table.QR_id.CopyTo(memoryStream);
+                qrId = Convert.ToBase64String(memoryStream.ToArray());
+            }
+
             string note = string.IsNullOrWhiteSpace(table.Note) ? "" : table.Note;
+
             return new Table
             {
                 TableName = table.TableName,
-                StatusId = 8, //set trạng thái trống
+                StatusId = 8, // Set trạng thái trống
                 Note = note,
                 QR_id = qrId
             };
         }
+
 
     }
 }
