@@ -1,11 +1,13 @@
 ﻿using OrderRestaurant.Data;
 using OrderRestaurant.DTO.FoodDTO;
+using OrderRestaurant.Helpers;
 using OrderRestaurant.Model;
 
 namespace OrderRestaurant.Service
 {
     public interface IFood
     {
+        Task<List<Food>> GetSearchFood(QuerryObject querry, string search = "");
         Task<Food> CreateFoodAsync(CreateFoodDTO food);
         Task<FoodModel> GetFoodByIdAsync(int id);
         Task<List<Food>> GetAllFoods();

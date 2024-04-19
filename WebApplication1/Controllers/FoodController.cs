@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.CategoryDTO;
 using OrderRestaurant.DTO.FoodDTO;
+using OrderRestaurant.Helpers;
 using OrderRestaurant.Model;
 using OrderRestaurant.Service;
 
@@ -23,6 +25,15 @@ namespace OrderRestaurant.Controllers
             _context = context;
             this.env = env;
             _categoryRespository = categoryRespository;
+        }
+
+        //Phân trang và tìm kiếm 
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery] QuerryObject querry ,string search = "")
+        {
+            var food = await _foodRepository.GetSearchFood(querry,search);
+            var list = food.Select(hh => hh.ToFoodDto());
+            return Ok(food);
         }
         [HttpGet]
         public async Task<IActionResult> GetFoodAll()
@@ -119,6 +130,34 @@ namespace OrderRestaurant.Controllers
 
             return Ok(model.ToFoodDto());
         }
+       /* [HttpPatch("{id}")]
+        public async Task<IActionResult> PatchFood([FromRoute] int id, [FromBody] JsonPatchDocument<Food> patchDocument)
+        {
+            if (patchDocument == null)
+            {
+                return BadRequest("The patchDocument field is required.");
+            }
+
+            var check = _context.Foods.FirstOrDefault(ss => ss.FoodId == id);
+            if (check == null)
+            {
+                return NotFound();
+            }
+
+            patchDocument.ApplyTo(check, (Microsoft.AspNetCore.JsonPatch.Adapters.IObjectAdapter)ModelState);
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            // Lưu thay đổi vào cơ sở dữ liệu
+            _context.SaveChanges();
+
+            return Ok(check);
+        }*/
+
+
 
         [HttpDelete]
         [Route("{id}")]

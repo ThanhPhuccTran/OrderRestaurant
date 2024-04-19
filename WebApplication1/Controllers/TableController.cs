@@ -52,28 +52,36 @@ namespace OrderRestaurant.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateTable([FromForm] CreateTableDTO createTable)
+        public async Task<IActionResult> CreateTable([FromForm] CreateTableDTO? createTable)
         {
             var model = createTable.ToTableFromCreate();
             await _table.CreateTable(model);
             return CreatedAtAction(nameof(GetTableById),new {id = model.TableId},model.ToTableDto());
         }
 
-        [HttpPut]
+        [HttpPatch]
         [Route("{id:int}")]
-        public async Task<IActionResult> UpdateTable([FromRoute] int id, [FromBody] UpdateTableDTO updateTableDTO)
+        public async Task<IActionResult> UpdateTable([FromRoute] int id, [FromForm] UpdateTableDTO updateTableDTO)
         {
             bool check = await _table.TableExit(id);
             if (!check)
             {
                 return NotFound("Không tìm thấy bàn");
             }
-            var model = await _table.UpdateTable(id,updateTableDTO);
 
-            if(model == null)
+            // Kiểm tra xem thuộc tính Name được gửi và không rỗng
+            if (updateTableDTO.TableName != null && updateTableDTO.TableName.Trim() == "")
+            {
+                return BadRequest("Tên không được để trống");
+            }
+
+            var model = await _table.UpdateTable(id, updateTableDTO);
+
+            if (model == null)
             {
                 return BadRequest(ModelState);
             }
+
             return Ok(model.ToTableDto());
         }
 
