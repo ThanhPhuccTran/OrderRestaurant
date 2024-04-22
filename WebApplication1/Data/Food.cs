@@ -21,5 +21,6 @@ namespace OrderRestaurant.Data
         [ForeignKey("CategoryId")]
         public Category? Category { get; set; }
         public List<OrderDetails> OrderDetails { get; set; }
+        public List<Cart> Carts { get; set; }
     }
 }

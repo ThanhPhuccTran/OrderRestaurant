@@ -5,7 +5,7 @@
         public string NameFood { get; set; }
         public decimal UnitPrice { get; set; }
 
-        public IFormFile ImageFile { get; set; }
+        public string? ImageFile { get; set; }
         public int CategoryId { get; set; }
     }
 }

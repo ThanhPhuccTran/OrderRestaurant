@@ -2,11 +2,11 @@
 
 namespace OrderRestaurant.Model
 {
-    public class Cart
+    public class CartDATA
     {
         public List<CartItemModel> Items { get; set; }
 
-        public Cart()
+        public CartDATA()
         {
             Items = new List<CartItemModel>();
         }
