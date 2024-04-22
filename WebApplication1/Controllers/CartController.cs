@@ -234,7 +234,7 @@ namespace OrderRestaurant.Controllers
             }
         }
 
-
+        // Khi xử lý xong giỏ hàng
         [HttpPost("complete-cart")]
         public async Task<IActionResult> CompleteCart([FromBody] ProcessingCartDTO processing)
         {
