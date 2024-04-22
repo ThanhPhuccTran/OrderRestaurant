@@ -85,7 +85,8 @@ namespace OrderRestaurant.Responsitory
             updateEmployee.Phone = updateEmployeeDTO.Phone;
             updateEmployee.Email = updateEmployeeDTO.Email;
             updateEmployee.Password = updateEmployeeDTO.Password;
-            if (updateEmployeeDTO.Image.Length > 0)
+            updateEmployee.Image = updateEmployeeDTO.Image;
+           /* if (updateEmployeeDTO.Image.Length > 0)
             {
                 using (var ms = new MemoryStream())
                 {
@@ -98,7 +99,7 @@ namespace OrderRestaurant.Responsitory
             else
             {
                 updateEmployee.Image = "";
-            }
+            }*/
             await _dbContext.SaveChangesAsync();
             return updateEmployee;
         }

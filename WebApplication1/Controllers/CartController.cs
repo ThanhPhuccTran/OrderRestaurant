@@ -31,8 +31,7 @@ namespace OrderRestaurant.Controllers
                 var table = await _context.Tables.FindAsync(cartDTO.TableId);
                 var food = await _context.Foods.FindAsync(cartDTO.FoodId);
 
-                Console.WriteLine($"Thông tin của bàn: {Newtonsoft.Json.JsonConvert.SerializeObject(table)}");
-                Console.WriteLine($"Thông tin của món ăn: {Newtonsoft.Json.JsonConvert.SerializeObject(food)}");
+              
                 if (table == null || food == null)
                 {
                     return BadRequest("Bàn hoặc món ăn không tồn tại.");
@@ -40,7 +39,7 @@ namespace OrderRestaurant.Controllers
                 // Kiểm tra xem bàn có trống không
                 if (table.StatusId == 8) // 8 là trạng thái cho bàn trống
                 {
-                    // Cập nhật trạng thái của bàn thành "đã có người" (StatusId là 9)
+                    // Cập nhật trạng thái của bàn thành "đã có người" 
                     table.StatusId = 7; // 7 là trạng thái cho bàn đã có người
                     _context.Tables.Update(table);
                 }
@@ -52,7 +51,7 @@ namespace OrderRestaurant.Controllers
                     FoodId = cartDTO.FoodId,
                     StatusId = 1, // Mặc định trạng thái là "chưa làm"
                     CreateTime = DateTime.Now,
-                    EmployeeId = null,
+                    EmployeeId = null, // nhân viên chưa xác nhận 
                 };
 
 

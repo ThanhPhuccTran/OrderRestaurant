@@ -41,11 +41,11 @@ namespace OrderRestaurant.Controllers
             return Ok(response);
         }
         [HttpPost("postEmployee")]
-        public async Task<IActionResult> CreateEmployeeImage([FromForm] CreateEmployeeDTO p)
+        public async Task<IActionResult> CreateEmployeeImage([FromBody] CreateEmployeeDTO p)
         {
-            var employee = new Employee { EmployeeName = p.EmployeeName, Phone = p.Phone, Email = p.Email, Password = p.Password };
+            var employee = new Employee { EmployeeName = p.EmployeeName, Phone = p.Phone, Email = p.Email, Password = p.Password , Image = p.Image };
 
-            if (p.Image.Length > 0)
+           /* if (p.Image.Length > 0)
             {
                 using (var ms = new MemoryStream())
                 {
@@ -58,11 +58,11 @@ namespace OrderRestaurant.Controllers
             else
             {
                 employee.Image = "";
-            }
+            }*/
             _context.Employees.Add(employee);
             _context.SaveChanges();
 
-            return Ok(new { message = "Thành công", employee = employee });
+            return Ok(new { message = "Thành công",employee });
         }
         [HttpGet]
         public async Task<IActionResult> GetEmployeeAll()
@@ -89,7 +89,7 @@ namespace OrderRestaurant.Controllers
 
         [HttpPut]
         [Route("{id}")]
-        public async Task<IActionResult> UpdateEmployee([FromRoute] int id, [FromForm] CreateEmployeeDTO employeeDTO)
+        public async Task<IActionResult> UpdateEmployee([FromRoute] int id, [FromBody] CreateEmployeeDTO employeeDTO)
         {
             var model = await _employee.UpdateEmployee(id, employeeDTO);
             if(model == null)

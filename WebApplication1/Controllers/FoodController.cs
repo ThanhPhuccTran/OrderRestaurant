@@ -104,7 +104,7 @@ namespace OrderRestaurant.Controllers
         // https://localhost:7014/api/Food/post-with-image
         [HttpPost("post-with-image")]
         
-        public async Task<IActionResult> CreateFoodImage([FromForm]FoodImage p)
+        public async Task<IActionResult> CreateFoodImage([FromBody]FoodImage p)
         {
             var food = new Food { CategoryId = p.CategoryId, NameFood = p.NameFood, UnitPrice = p.UnitPrice, UrlImage = p.Image };
             if(!await _categoryRespository.CategoryExit(p.CategoryId))
@@ -163,7 +163,7 @@ namespace OrderRestaurant.Controllers
 
         [HttpPut]
         [Route("{id}")]
-        public async Task<IActionResult> UpdateFood([FromRoute] int id, [FromForm] UpdateFoodDTO updateFood)
+        public async Task<IActionResult> UpdateFood([FromRoute] int id, [FromBody] UpdateFoodDTO updateFood)
         {
             var model = await _foodRepository.UpdateFood(id, updateFood);
             if (model == null)
