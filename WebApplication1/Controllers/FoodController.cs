@@ -71,17 +71,47 @@ namespace OrderRestaurant.Controllers
 
             return Ok(model);
         }
+        [HttpGet]
+        [Route("{foodid}")]
+        public async Task<IActionResult> GetFoodById(int foodid)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var food = await _context.Foods
+                .Where(s => s.FoodId == foodid)
+                .Select(s => new FoodModel
+                {
+                    FoodId = s.FoodId,
+                    NameFood = s.NameFood,
+                    UnitPrice = s.UnitPrice,
+                    UrlImage = s.UrlImage,
+                    CategoryId = s.CategoryId,
+                    Category = _context.Categoies.FirstOrDefault(a => a.CategoryId == s.CategoryId)
+                })
+                .FirstOrDefaultAsync();
+
+            if (food == null)
+            {
+                return NotFound(); // Trả về 404 nếu không tìm thấy thức ăn với mã ID tương ứng
+            }
+
+            return Ok(food);
+        }
+
         // https://localhost:7014/api/Food/post-with-image
         [HttpPost("post-with-image")]
         
         public async Task<IActionResult> CreateFoodImage([FromForm]FoodImage p)
         {
-            var food = new Food { CategoryId = p.CategoryId, NameFood = p.NameFood, UnitPrice = p.UnitPrice };
+            var food = new Food { CategoryId = p.CategoryId, NameFood = p.NameFood, UnitPrice = p.UnitPrice, UrlImage = p.Image };
             if(!await _categoryRespository.CategoryExit(p.CategoryId))
             {
                 return BadRequest("Loại món không được tìm thấy");
             }
-            // Xử lý ảnh
+           /* // Xử lý ảnh
             if (p.Image.Length > 0)
             {
                 using (var ms = new MemoryStream())
@@ -96,14 +126,13 @@ namespace OrderRestaurant.Controllers
             {
                 food.UrlImage = "";
             }
-
+*/
             _context.Foods.Add(food);
             _context.SaveChanges();
 
-            var baseUrl = $"{this.Request.Scheme}:{this.Request.Host}";
-            var imageUrl = $"{baseUrl}/{food.UrlImage}";
+          
 
-            return Ok(new { message = "Thành công", food = food, imageUrl = imageUrl });
+            return Ok(new { message = "Thành công", food });
         }
 
         [HttpPost]
@@ -116,10 +145,10 @@ namespace OrderRestaurant.Controllers
 
             var createdFood = await _foodRepository.CreateFoodAsync(foodDTO);
 
-            return CreatedAtAction(nameof(GetFood), new { id = createdFood.FoodId }, createdFood);
+            return CreatedAtAction(nameof(GetFoodById), new { id = createdFood.FoodId }, createdFood);
         }
         //https://localhost:7014/api/Food/1
-        [HttpGet("{id}")]
+        /*[HttpGet("{id}")]
         public async Task<ActionResult<FoodModel>> GetFood(int id)
         {
             var food = await _foodRepository.GetFoodByIdAsync(id);
@@ -130,7 +159,7 @@ namespace OrderRestaurant.Controllers
             }
 
             return food;
-        }
+        }*/
 
         [HttpPut]
         [Route("{id}")]

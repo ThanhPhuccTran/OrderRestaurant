@@ -25,9 +25,10 @@ namespace OrderRestaurant.Responsitory
                 NameFood = food.NameFood,
                 UnitPrice = food.UnitPrice,
                 CategoryId = food.CategoryId,
+                UrlImage = food.ImageFile
             };
 
-            if (food.ImageFile != null && food.ImageFile.Length > 0)
+           /* if (food.ImageFile != null && food.ImageFile.Length > 0)
             {
                 var imagePath = "image";
                 var imageName = Guid.NewGuid().ToString() + Path.GetExtension(food.ImageFile.FileName);
@@ -38,10 +39,10 @@ namespace OrderRestaurant.Responsitory
                     await food.ImageFile.CopyToAsync(stream);
                 }
 
-                model.UrlImage = fullPath;
+                model.UrlImage = fullPath;*/
                 _context.Foods.Add(model);
                 await _context.SaveChangesAsync();
-            }
+            
             return new Food
             {
                 FoodId = model.FoodId,
@@ -86,7 +87,8 @@ namespace OrderRestaurant.Responsitory
             updateFood.NameFood = updateFoodDTO.NameFood;
             updateFood.UnitPrice = updateFoodDTO.UnitPrice;
             updateFood.CategoryId = updateFoodDTO.CategoryId;
-            // Xử lý ảnh
+            updateFood.UrlImage = updateFoodDTO.Image;
+           /* // Xử lý ảnh
             if (updateFoodDTO.Image.Length > 0)
             {
                 using (var ms = new MemoryStream())
@@ -100,7 +102,7 @@ namespace OrderRestaurant.Responsitory
             else
             {
                 updateFood.UrlImage = "";
-            }
+            }*/
 
             await _context.SaveChangesAsync();
             return updateFood;

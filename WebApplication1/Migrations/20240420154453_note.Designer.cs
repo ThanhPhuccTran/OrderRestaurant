@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OrderRestaurant.Data;
 
@@ -11,9 +12,11 @@ using OrderRestaurant.Data;
 namespace OrderRestaurant.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240420154453_note")]
+    partial class note
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -39,6 +42,9 @@ namespace OrderRestaurant.Migrations
                     b.Property<int>("FoodId")
                         .HasColumnType("int");
 
+                    b.Property<int>("ManageStatusId")
+                        .HasColumnType("int");
+
                     b.Property<int>("StatusId")
                         .HasColumnType("int");
 
@@ -50,6 +56,8 @@ namespace OrderRestaurant.Migrations
                     b.HasIndex("EmployeeId");
 
                     b.HasIndex("FoodId");
+
+                    b.HasIndex("ManageStatusId");
 
                     b.HasIndex("StatusId");
 
@@ -296,8 +304,14 @@ namespace OrderRestaurant.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("OrderRestaurant.Data.ManageStatus", "ManageStatusCart")
+                    b.HasOne("OrderRestaurant.Data.ManageStatus", null)
                         .WithMany("Carts")
+                        .HasForeignKey("ManageStatusId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OrderRestaurant.Data.ManageStatus", "ManageStatusCart")
+                        .WithMany()
                         .HasForeignKey("StatusId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
