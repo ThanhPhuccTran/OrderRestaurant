@@ -43,20 +43,28 @@ namespace OrderRestaurant.Controllers
                     table.StatusId = 7; // 7 là trạng thái cho bàn đã có người
                     _context.Tables.Update(table);
                 }
-
-                // Tạo mới một mục trong bảng Cart
-                var newCart = new Cart
+                var check = await _context.CartUser.FirstOrDefaultAsync(c=>c.FoodId == cartDTO.FoodId && c.TableId == cartDTO.TableId);
+                if (check != null)
                 {
-                    TableId = cartDTO.TableId,
-                    FoodId = cartDTO.FoodId,
-                    StatusId = 1, // Mặc định trạng thái là "chưa làm"
-                    CreateTime = DateTime.Now,
-                    EmployeeId = null, // nhân viên chưa xác nhận 
-                };
+                    check.Quantity++;
+                    _context.CartUser.Update(check);
+                }
+                else
+                {
+                    // Tạo mới một mục trong bảng Cart
+                    var newCart = new Cart
+                    {
+                        TableId = cartDTO.TableId,
+                        FoodId = cartDTO.FoodId,
+                        StatusId = 1, // Mặc định trạng thái là "chưa làm"
+                        CreateTime = DateTime.Now,
+                        Quantity = 1,
+                        EmployeeId = null, // nhân viên chưa xác nhận 
+                    };
 
 
-                _context.CartUser.Add(newCart);
-
+                    _context.CartUser.Add(newCart);
+                }
                 // Lưu thay đổi vào cơ sở dữ liệu
                 await _context.SaveChangesAsync();
 
@@ -76,16 +84,25 @@ namespace OrderRestaurant.Controllers
             {
                 return BadRequest(ModelState);
             }
-
-            var cart = new Cart
+            var check = await _context.CartUser.FirstOrDefaultAsync(c => c.FoodId == cartlist.FoodId && c.TableId == cartlist.TableId);
+            if (check != null)
             {
-                TableId = cartlist.TableId,
-                FoodId = cartlist.FoodId,
-                StatusId = 1, // Giỏ hàng mới tạo
-                EmployeeId = cartlist.EmployeeId,
-                CreateTime = DateTime.Now
-            };
-            _context.CartUser.Add(cart);
+                check.Quantity++;
+                _context.CartUser.Update(check);
+            }
+            else
+            {
+                var cart = new Cart
+                {
+                    TableId = cartlist.TableId,
+                    FoodId = cartlist.FoodId,
+                    StatusId = 1, // Giỏ hàng mới tạo
+                    Quantity = 1,
+                    EmployeeId = null,
+                    CreateTime = DateTime.Now
+                };
+                _context.CartUser.Add(cart);
+            }
             // Kiểm tra xem bàn có trống không
             var table = await _context.Tables.FindAsync(cartlist.TableId);
             if (table != null && table.StatusId == 8) // 8 là trạng thái cho bàn trống
@@ -98,10 +115,6 @@ namespace OrderRestaurant.Controllers
             return Ok("Thêm vào giỏ thành công");
 
         }
-
-
-
-
         [HttpGet]
         [Route("{cartId}")]
         public async Task<IActionResult> GetCartById(int cartId)
@@ -122,6 +135,7 @@ namespace OrderRestaurant.Controllers
                                TableId = s.TableId,
                                CreateTime = DateTime.Now,
                                EmployeeId = s.EmployeeId,
+                               Quantity = s.Quantity,
                                FoodCart = _context.Foods.FirstOrDefault(a => a.FoodId == s.FoodId) ?? new Food(),
                                TableCart = _context.Tables.FirstOrDefault(a => a.TableId == s.TableId) ?? new Table(),
                                ManageStatusCart = _context.Statuss.FirstOrDefault(a => a.StatusId == s.StatusId) ?? new ManageStatus(),
@@ -135,12 +149,123 @@ namespace OrderRestaurant.Controllers
             return Ok(model);
         }
 
+        [HttpGet("get-cart-by-table/{tableId}")]
+        public async Task<IActionResult> GetCartByTable(int tableId)
+        {
+            var model = await _context.CartUser.Where(s => s.TableId == tableId)
+                                               
+                                               .Select(s => new  
+                                               {
+                                                FoodId = s.FoodId,
+                                                Quantity = s.Quantity,
+                                                FoodCart = _context.Foods.FirstOrDefault(a => a.FoodId == s.FoodId) ?? new Food(),
+
+                                               }).ToListAsync();
+            if(model == null)
+            {
+                return NotFound("Không tìm thấy");
+            }
+            return Ok(model);
+        }
 
 
+        //Khi Khách hàng chấp nhận giỏ hàng
+        [HttpPost("select-cart")]
+        public async Task<IActionResult> SelectCart([FromBody] SelectCartDTO selectDTO)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                var cartItem = await _context.CartUser.Where(c => c.TableId == selectDTO.TableId).ToListAsync();
+                if(cartItem == null || !cartItem.Any())
+                {
+                    return BadRequest("Không có mặt hàng trong giỏ");
+                }
+                foreach(var item in cartItem)
+                {
+                    item.StatusId = 2; // Chờ xác nhận đơn hàng
+                    _context.CartUser.Update(item);
+                }
+                await _context.SaveChangesAsync();
+                return Ok("Order món ăn thành công , Vui lòng chờ xử lý");
+            }
+            catch(Exception ex) 
+            {
+                return StatusCode(500, $"Lỗi khi xử lý giỏ hàng: {ex.Message}");
+            };
+        }
+        //Nhân viên xử lý Cart
+        [HttpPost("processing-cart")]
+        public async Task<IActionResult> ProcessingCart([FromBody] ProcessingCartDTO processing)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                
+                var cartItems = await _context.CartUser.Where(c => c.TableId == processing.TableId).ToListAsync();
+                if (cartItems == null || !cartItems.Any())
+                {
+                    return BadRequest("Không tìm thấy giỏ hàng.");
+                }
+
+                // Cập nhật trạng thái của từng giỏ hàng
+                foreach (var cartItem in cartItems)
+                {
+                    cartItem.StatusId = 3; // 3 là trạng thái "đang xử lý"
+                    cartItem.EmployeeId = processing.EmployeeId;
+                    _context.CartUser.Update(cartItem);
+                }
+
+                // Lưu thay đổi vào cơ sở dữ liệu
+                await _context.SaveChangesAsync();
+
+                return Ok("Đã xử lý đơn hàng");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi khi xử lý giỏ hàng: {ex.Message}");
+            }
+        }
 
 
+        [HttpPost("complete-cart")]
+        public async Task<IActionResult> CompleteCart([FromBody] ProcessingCartDTO processing)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                var cartItem = await _context.CartUser.Where(c => c.TableId == processing.TableId).ToListAsync();
+                if (cartItem == null)
+                {
+                    return BadRequest("Không tìm thấy giỏ hàng.");
+                }
+                // Cập nhật trạng thái của từng giỏ hàng
+                foreach (var item in cartItem)
+                {
+                    item.StatusId = 4; // 4 là trạng thái "làm xong giỏ hàng"
+                    item.EmployeeId = processing.EmployeeId;
+                    _context.CartUser.Update(item);
+                }
+                await _context.SaveChangesAsync();
+                return Ok("Đã xử lý đơn hàng");
 
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi khi xử lý giỏ hàng: {ex.Message}");
 
+            }
+        }
 
     }
 }

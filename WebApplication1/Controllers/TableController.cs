@@ -75,7 +75,7 @@ namespace OrderRestaurant.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateTable([FromForm] CreateTableDTO? createTable)
+        public async Task<IActionResult> CreateTable([FromBody] CreateTableDTO? createTable)
         {
             var model = createTable.ToTableFromCreate();
             if(model == null)
@@ -88,7 +88,7 @@ namespace OrderRestaurant.Controllers
 
         [HttpPut]
         [Route("{id:int}")]
-        public async Task<IActionResult> UpdateTable([FromRoute] int id, [FromForm] UpdateTableDTO updateTableDTO)
+        public async Task<IActionResult> UpdateTable([FromRoute] int id, [FromBody] UpdateTableDTO updateTableDTO)
         {
             bool check = await _table.TableExit(id);
             if (!check)
