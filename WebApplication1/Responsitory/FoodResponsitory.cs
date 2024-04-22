@@ -47,9 +47,10 @@ namespace OrderRestaurant.Responsitory
             {
                 FoodId = model.FoodId,
                 NameFood = model.NameFood,
+                CategoryId = food.CategoryId,
                 UnitPrice = model.UnitPrice,
                 UrlImage = model.UrlImage,
-                CategoryId = food.CategoryId
+               
             };
         }
 
