@@ -31,11 +31,18 @@ namespace OrderRestaurant.Controllers
                 var table = await _context.Tables.FindAsync(cartDTO.TableId);
                 var food = await _context.Foods.FindAsync(cartDTO.FoodId);
 
-                /*Console.WriteLine($"Thông tin của bàn: {Newtonsoft.Json.JsonConvert.SerializeObject(table)}");
-                Console.WriteLine($"Thông tin của món ăn: {Newtonsoft.Json.JsonConvert.SerializeObject(food)}");*/
+                Console.WriteLine($"Thông tin của bàn: {Newtonsoft.Json.JsonConvert.SerializeObject(table)}");
+                Console.WriteLine($"Thông tin của món ăn: {Newtonsoft.Json.JsonConvert.SerializeObject(food)}");
                 if (table == null || food == null)
                 {
                     return BadRequest("Bàn hoặc món ăn không tồn tại.");
+                }
+                // Kiểm tra xem bàn có trống không
+                if (table.StatusId == 8) // 8 là trạng thái cho bàn trống
+                {
+                    // Cập nhật trạng thái của bàn thành "đã có người" (StatusId là 9)
+                    table.StatusId = 7; // 7 là trạng thái cho bàn đã có người
+                    _context.Tables.Update(table);
                 }
 
                 // Tạo mới một mục trong bảng Cart
@@ -63,7 +70,7 @@ namespace OrderRestaurant.Controllers
         }
 
         //FE->BE
-        [HttpPost]
+        [HttpPost("add-to-cart")]
         public async Task<IActionResult> AddToCart([FromBody] CartList cartlist)
         {
             if (!ModelState.IsValid)
@@ -97,14 +104,14 @@ namespace OrderRestaurant.Controllers
                 return BadRequest(ModelState);
             }
             var model = await _context.CartUser
-                           .Include(c => c.TableCart)  
+                           .Include(c => c.TableCart)
                            .Include(c => c.ManageStatusCart)
                            .Where(s => s.CartId == cartId)
                            .Select(s => new CartModel
                            {
                                CartId = s.CartId,
                                FoodId = s.FoodId,
-                               StatusId = s.StatusId, 
+                               StatusId = s.StatusId,
                                TableId = s.TableId,
                                CreateTime = DateTime.Now,
                                EmployeeId = s.EmployeeId,
@@ -121,7 +128,7 @@ namespace OrderRestaurant.Controllers
             return Ok(model);
         }
 
-        
+
 
 
 
