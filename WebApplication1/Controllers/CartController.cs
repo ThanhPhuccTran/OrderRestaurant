@@ -86,6 +86,14 @@ namespace OrderRestaurant.Controllers
                 CreateTime = DateTime.Now
             };
             _context.CartUser.Add(cart);
+            // Kiểm tra xem bàn có trống không
+            var table = await _context.Tables.FindAsync(cartlist.TableId);
+            if (table != null && table.StatusId == 8) // 8 là trạng thái cho bàn trống
+            {
+                
+                table.StatusId = 7; // 7 là trạng thái cho bàn đã có người
+                _context.Tables.Update(table);
+            }
             _context.SaveChanges();
             return Ok("Thêm vào giỏ thành công");
 

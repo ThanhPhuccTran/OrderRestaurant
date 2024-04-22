@@ -59,8 +59,6 @@ namespace OrderRestaurant.Responsitory
                 QR_id = f.QR_id,
                 StatusId = f.StatusId,
                 Statuss = f.Statuss
-
-
             }).Skip(skipNumber)
                 .Take(querry.PageSize)
                 .ToListAsync();
