@@ -91,7 +91,6 @@ namespace OrderRestaurant.Controllers
                 {
                     return BadRequest("Giỏ hàng trống hoặc không hợp lệ.");
                 }
-
                 var order = new Order
                 {
                     TableId = tableId,
