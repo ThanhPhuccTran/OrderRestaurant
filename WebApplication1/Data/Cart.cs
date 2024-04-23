@@ -12,8 +12,10 @@ namespace OrderRestaurant.Data
         public int FoodId { get; set; }
         public int StatusId { get; set; }
         public int? EmployeeId { get; set; }
+        public int Quantity { get; set; }
         public DateTime CreateTime { get; set; } = DateTime.Now;
-
+        public bool IsDelete { get; set; } = false;
+        public string SessionId {  get; set; }
         [ForeignKey("TableId")]
         public Table TableCart { get; set; }
         [ForeignKey("FoodId")]

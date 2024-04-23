@@ -9,8 +9,9 @@ namespace OrderRestaurant.Model
         public int FoodId { get; set; }
         public int StatusId { get; set; }
         public int? EmployeeId { get; set; }
+        public int Quantity { get; set; }
         public DateTime CreateTime { get; set; } = DateTime.Now;
-       
+        public bool IsDelete { get; set; }
         public Table TableCart { get; set; }
      
         public Food FoodCart { get; set; }

@@ -59,8 +59,6 @@ namespace OrderRestaurant.Responsitory
                 QR_id = f.QR_id,
                 StatusId = f.StatusId,
                 Statuss = f.Statuss
-
-
             }).Skip(skipNumber)
                 .Take(querry.PageSize)
                 .ToListAsync();
@@ -89,7 +87,8 @@ namespace OrderRestaurant.Responsitory
             tableUpdate.TableName = tableDTO.TableName;
             tableUpdate.Note = note;
             tableUpdate.StatusId = tableDTO.StatusId;
-            if (tableDTO.QR_id.Length > 0)
+            tableUpdate.QR_id = tableDTO.QR_id;
+           /* if (tableDTO.QR_id.Length > 0)
             {
                 using (var ms = new MemoryStream())
                 {
@@ -102,7 +101,7 @@ namespace OrderRestaurant.Responsitory
             else
             {
                 tableUpdate.QR_id = "";
-            }
+            }*/
             await _dbContext.SaveChangesAsync();
             return tableUpdate;
         }

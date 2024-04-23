@@ -25,12 +25,12 @@ namespace OrderRestaurant.DTO.TableDTO
                 return null;
             }
 
-            string qrId;
+            /*string qrId;
             using (var memoryStream = new MemoryStream())
             {
                 table.QR_id.CopyTo(memoryStream);
                 qrId = Convert.ToBase64String(memoryStream.ToArray());
-            }
+            }*/
 
             string note = string.IsNullOrWhiteSpace(table.Note) ? "" : table.Note;
 
@@ -39,7 +39,7 @@ namespace OrderRestaurant.DTO.TableDTO
                 TableName = table.TableName,
                 StatusId = 8, // Set trạng thái trống
                 Note = note,
-                QR_id = qrId
+                QR_id = table.QR_id
             };
         }
 
