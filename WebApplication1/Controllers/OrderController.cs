@@ -86,7 +86,7 @@ namespace OrderRestaurant.Controllers
         {
             try
             {
-                // Kiểm tra giỏ hàng có null hay không
+               
                 if (cartModel == null || cartModel.Items == null || !cartModel.Items.Any())
                 {
                     return BadRequest("Giỏ hàng trống hoặc không hợp lệ.");
@@ -115,14 +115,14 @@ namespace OrderRestaurant.Controllers
                     {
                         Quantity = item.Quantity,
                         UnitPrice = food.UnitPrice,
-                        Note = "", // Bạn có thể xử lý ghi chú ở đây nếu cần
+                        Note = "", 
                         TotalAmount = TotalPrice,
                         FoodId = food.FoodId,
                     };
                     order.OrderDetails.Add(orderDetails);
                 }
 
-                // Thêm order vào context ngoài vòng lặp foreach
+                
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
 
