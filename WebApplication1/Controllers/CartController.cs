@@ -43,7 +43,7 @@ namespace OrderRestaurant.Controllers
                     table.StatusId = 7; // 7 là trạng thái cho bàn đã có người
                     _context.Tables.Update(table);
                 }
-                var check = await _context.CartUser.FirstOrDefaultAsync(c=>c.FoodId == cartDTO.FoodId && c.TableId == cartDTO.TableId);
+                var check = await _context.CartUser.FirstOrDefaultAsync(c=>c.FoodId == cartDTO.FoodId && c.TableId == cartDTO.TableId && c.IsDelete == false);
                 if (check != null)
                 {
                     check.Quantity++;
@@ -59,6 +59,8 @@ namespace OrderRestaurant.Controllers
                         StatusId = 1, // Mặc định trạng thái là "chưa làm"
                         CreateTime = DateTime.Now,
                         Quantity = 1,
+                        IsDelete = false,
+                        SessionId="",
                         EmployeeId = null, // nhân viên chưa xác nhận 
                     };
 
@@ -84,7 +86,7 @@ namespace OrderRestaurant.Controllers
             {
                 return BadRequest(ModelState);
             }
-            var check = await _context.CartUser.FirstOrDefaultAsync(c => c.FoodId == cartlist.FoodId && c.TableId == cartlist.TableId);
+            var check = await _context.CartUser.FirstOrDefaultAsync(c => c.FoodId == cartlist.FoodId && c.TableId == cartlist.TableId && c.IsDelete == cartlist.IsDelete );
             if (check != null)
             {
                 check.Quantity++;
@@ -99,6 +101,7 @@ namespace OrderRestaurant.Controllers
                     StatusId = 1, // Giỏ hàng mới tạo
                     Quantity = 1,
                     EmployeeId = null,
+                    IsDelete = false,
                     CreateTime = DateTime.Now
                 };
                 _context.CartUser.Add(cart);
@@ -136,6 +139,7 @@ namespace OrderRestaurant.Controllers
                                CreateTime = DateTime.Now,
                                EmployeeId = s.EmployeeId,
                                Quantity = s.Quantity,
+                               IsDelete = s.IsDelete,
                                FoodCart = _context.Foods.FirstOrDefault(a => a.FoodId == s.FoodId) ?? new Food(),
                                TableCart = _context.Tables.FirstOrDefault(a => a.TableId == s.TableId) ?? new Table(),
                                ManageStatusCart = _context.Statuss.FirstOrDefault(a => a.StatusId == s.StatusId) ?? new ManageStatus(),
@@ -152,7 +156,7 @@ namespace OrderRestaurant.Controllers
         [HttpGet("get-cart-by-table/{tableId}")]
         public async Task<IActionResult> GetCartByTable(int tableId)
         {
-            var model = await _context.CartUser.Where(s => s.TableId == tableId)
+            var model = await _context.CartUser.Where(s => s.TableId == tableId && s.IsDelete == false)
                                                
                                                .Select(s => new  
                                                {
@@ -179,7 +183,7 @@ namespace OrderRestaurant.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-                var cartItem = await _context.CartUser.Where(c => c.TableId == selectDTO.TableId).ToListAsync();
+                var cartItem = await _context.CartUser.Where(c => c.TableId == selectDTO.TableId && c.IsDelete ==false).ToListAsync();
                 if(cartItem == null || !cartItem.Any())
                 {
                     return BadRequest("Không có mặt hàng trong giỏ");
@@ -201,6 +205,13 @@ namespace OrderRestaurant.Controllers
         [HttpPost("processing-cart")]
         public async Task<IActionResult> ProcessingCart([FromBody] ProcessingCartDTO processing)
         {
+            
+            int processedOrdersCount = await _context.CartUser
+                .CountAsync(c => c.TableId == processing.TableId && c.StatusId == 4 && c.IsDelete == true);
+
+            
+            string sessionId = "HD" + (processedOrdersCount + 1);
+
             try
             {
                 if (!ModelState.IsValid)
@@ -208,8 +219,7 @@ namespace OrderRestaurant.Controllers
                     return BadRequest(ModelState);
                 }
 
-                
-                var cartItems = await _context.CartUser.Where(c => c.TableId == processing.TableId).ToListAsync();
+                var cartItems = await _context.CartUser.Where(c => c.TableId == processing.TableId && c.IsDelete == false).ToListAsync();
                 if (cartItems == null || !cartItems.Any())
                 {
                     return BadRequest("Không tìm thấy giỏ hàng.");
@@ -220,6 +230,7 @@ namespace OrderRestaurant.Controllers
                 {
                     cartItem.StatusId = 3; // 3 là trạng thái "đang xử lý"
                     cartItem.EmployeeId = processing.EmployeeId;
+                    cartItem.SessionId = sessionId; // Gán SessionId cho mỗi giỏ hàng
                     _context.CartUser.Update(cartItem);
                 }
 
@@ -244,7 +255,7 @@ namespace OrderRestaurant.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-                var cartItem = await _context.CartUser.Where(c => c.TableId == processing.TableId).ToListAsync();
+                var cartItem = await _context.CartUser.Where(c => c.TableId == processing.TableId && c.IsDelete == false).ToListAsync();
                 if (cartItem == null)
                 {
                     return BadRequest("Không tìm thấy giỏ hàng.");
@@ -254,7 +265,10 @@ namespace OrderRestaurant.Controllers
                 {
                     item.StatusId = 4; // 4 là trạng thái "làm xong giỏ hàng"
                     item.EmployeeId = processing.EmployeeId;
+                    item.IsDelete = true;
+                    
                     _context.CartUser.Update(item);
+
                 }
                 await _context.SaveChangesAsync();
                 return Ok("Đã xử lý đơn hàng");
@@ -266,6 +280,8 @@ namespace OrderRestaurant.Controllers
 
             }
         }
+
+
 
     }
 }

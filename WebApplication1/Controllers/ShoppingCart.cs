@@ -16,7 +16,7 @@ namespace OrderRestaurant.Controllers
     [ApiController]
     public class ShoppingCart : ControllerBase
     {
-        private readonly IFood _foodRepository;
+       /* private readonly IFood _foodRepository;
         private readonly ApplicationDBContext _context;
         private readonly IMemoryCache _cache;
         public ShoppingCart(IFood foodRepository, ApplicationDBContext context,IMemoryCache cache)
@@ -398,7 +398,7 @@ namespace OrderRestaurant.Controllers
             }
         }
 
-       /* [HttpPut]
+       *//* [HttpPut]
         [Route("update-order/{orderId}")]
         public IActionResult UpdateOrder(int orderId, [FromBody] OrderUpdateModel orderUpdateModel)
         {
@@ -438,7 +438,7 @@ namespace OrderRestaurant.Controllers
             {
                 return StatusCode(500, $"Lỗi: {ex.Message}");
             }
-        }*/
+        }*//*
 
         [HttpPut]
         [Route("update-cart")]
@@ -530,6 +530,6 @@ namespace OrderRestaurant.Controllers
                 return StatusCode(500, $"Lỗi: {ex.Message}");
             }
         }
-
+*/
     }
 }

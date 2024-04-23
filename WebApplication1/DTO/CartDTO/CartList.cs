@@ -7,5 +7,6 @@
         public int StatusId { get; set; }
         public int Quantity { get; set; }
         public int? EmployeeId { get; set; }
+        public bool IsDelete {  get; set; }
     }
 }
