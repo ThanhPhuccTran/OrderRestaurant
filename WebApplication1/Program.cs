@@ -25,6 +25,7 @@ namespace WebApplication1
             builder.Services.AddScoped<IEmployee, EmployeeResponsitory>();
             builder.Services.AddScoped<ITable, TableResponsitory>();
             builder.Services.AddScoped<IOrder, OrderResponsitory>();
+            builder.Services.AddScoped<IConfig, ConfigResponsitory>();
 
             builder.Services.AddDbContext<ApplicationDBContext>(options =>
             {

@@ -21,27 +21,27 @@
         /// <summary>
         /// Bàn trống
         /// </summary>
-        public const int TABLE_EMPTY = 1;
+        public const int TABLE_EMPTY = 5;
         /// <summary>
         /// Bàn đang có khách ngồi
         /// </summary>
-        public const int TABLE_GUESTS = 2;
+        public const int TABLE_GUESTS = 6;
         /// <summary>
         /// Bàn đã có khách đặt
         /// </summary>
-        public const int TABLE_BOOKING = 3;
+        public const int TABLE_BOOKING = 7;
         /// <summary>
         /// Yêu cầu mới
         /// </summary>
-        public const int REQUEST_INIT = 1;
+        public const int REQUEST_INIT = 8;
         /// <summary>
         /// Yêu cầu nhân viên đã hoàn thành
         /// </summary>
-        public const int REQUEST_COMPLETE = 2;
+        public const int REQUEST_COMPLETE = 9;
         /// <summary>
         /// Yêu cầu bị từ chối
         /// </summary>
-        public const int REQUEST_REFUSE = 3;
+        public const int REQUEST_REFUSE = 10;
 
     }
 }
