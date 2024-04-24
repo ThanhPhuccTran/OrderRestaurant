@@ -97,6 +97,8 @@ namespace OrderRestaurant.Controllers
                     TableId = cartDto.TableId,
                     CreationTime = DateTime.Now,
                     StatusId = 6,
+                    Pay = cartDto.TotalAmount,
+                    Note ="",
                 };
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
@@ -121,7 +123,7 @@ namespace OrderRestaurant.Controllers
                 }
                 await _context.SaveChangesAsync();
 
-                return Ok("THÊM VÀO GIỎ THÀNH CÔNG");
+                return Ok("THÊM VÀO GIỎ ĐƠN HÀNG THÀNH CÔNG");
             }
             catch (Exception ex)
             {

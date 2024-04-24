@@ -14,7 +14,7 @@ namespace OrderRestaurant.Data
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Table> Tables { get; set; }
         public DbSet<ManageStatus> Statuss { get; set; }
-        public DbSet<Cart> CartUser { get; set; }
+       // public DbSet<Cart> CartUser { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<OrderDetails>()
@@ -38,7 +38,7 @@ namespace OrderRestaurant.Data
 
 
 
-            modelBuilder.Entity<Cart>()
+        /*    modelBuilder.Entity<Cart>()
             .HasOne(c => c.TableCart)
             .WithMany(t => t.Carts)
             .HasForeignKey(c => c.TableId)
@@ -61,7 +61,7 @@ namespace OrderRestaurant.Data
                 .WithMany(e => e.Carts)
                 .HasForeignKey(c => c.StatusId)
                 .OnDelete(DeleteBehavior.NoAction);
-
+*/
            
         }
     }

@@ -12,7 +12,7 @@ namespace OrderRestaurant.Data
 
         public List<Order> Orders { get; set; }
         public List<Table> Tables { get; set; }
-        public List<Cart> Carts { get; set; }
+       /* public List<Cart> Carts { get; set; }*/
 
     }
 }
