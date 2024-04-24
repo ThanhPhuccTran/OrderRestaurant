@@ -3,11 +3,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace OrderRestaurant.Data
 {
-    [Table("ManageStatus")]
+    [Table("Settings")]
     public partial class ManageStatus
     {
         [Key]
         public int StatusId { get; set; }
+        public int Code { get; set; }
+        public string Type { get; set; }
+        public string Value { get; set; }
         public string Description { get; set; }
 
         public List<Order> Orders { get; set; }

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
 using OrderRestaurant.Data;
 using OrderRestaurant.Service;
 using System;
@@ -21,6 +22,36 @@ namespace OrderRestaurant.Responsitory
         {
             return await _dbContext.Orders.FindAsync(id);
         }
+
+       
+
+        public async Task<List<Order>> GetSearchType(string type = "Order")
+        {
+            var query = _dbContext.Orders.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(type))
+            {
+                query = query.Where(s => s.Statuss.Type == type);
+            }
+
+            var orders = await query
+                .Select(f => new Order
+                {
+                    OrderId = f.OrderId,
+                    CreationTime = f.CreationTime,
+                    StatusId = f.StatusId,
+                    Pay = f.Pay,
+                    Note = f.Note,
+                    TableId = f.TableId,
+                    EmployeeId = f.EmployeeId,
+                    CustomerId = f.CustomerId,
+                    PaymentTime = f.PaymentTime,
+                    ReceivingTime = f.ReceivingTime,
+                })
+                .ToListAsync();
+
+            return orders;
+        }
+
 
         public async Task UpdateAsync(Order order)
         {
