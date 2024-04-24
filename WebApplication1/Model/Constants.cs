@@ -7,21 +7,41 @@
         /// </summary>
         public const int ORDER_INIT = 1;
         /// <summary>
-        /// Đơn hàng đã được duyệt (đang chờ chuyển hàng)
+        /// Đơn hàng đã được duyệt
         /// </summary>
-        public const int ORDER_ACCEPTED = 2;
+        public const int ORDER_APPROVE = 2;
         /// <summary>
-        /// Đơn hàng đang được chuyển hàng
-        /// Đơn hàng đã hoàn tất
+        /// Đơn hàng đã được thanh toán
         /// </summary>
-        public const int ORDER_FINISHED = 3;
+        public const int ORDER_PAYMENT = 3;
         /// <summary>
-        /// Đơn hàng bị hủy
+        /// Đơn hàng đã bị từ chối
         /// </summary>
-        public const int ORDER_CANCEL = -1;
+        public const int ORDER_REFUSE = 4;
         /// <summary>
-        /// Đơn hàng bị từ chối
+        /// Bàn trống
         /// </summary>
-        public const int ORDER_REJECTED = -2;
+        public const int TABLE_EMPTY = 1;
+        /// <summary>
+        /// Bàn đang có khách ngồi
+        /// </summary>
+        public const int TABLE_GUESTS = 2;
+        /// <summary>
+        /// Bàn đã có khách đặt
+        /// </summary>
+        public const int TABLE_BOOKING = 3;
+        /// <summary>
+        /// Yêu cầu mới
+        /// </summary>
+        public const int REQUEST_INIT = 1;
+        /// <summary>
+        /// Yêu cầu nhân viên đã hoàn thành
+        /// </summary>
+        public const int REQUEST_COMPLETE = 2;
+        /// <summary>
+        /// Yêu cầu bị từ chối
+        /// </summary>
+        public const int REQUEST_REFUSE = 3;
+
     }
 }

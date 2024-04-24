@@ -42,6 +42,34 @@ namespace OrderRestaurant.Controllers
             }).ToList();
             return Ok(model);
         }
+        [HttpGet("get-order-details/{orderId}")]
+        public async Task<IActionResult> GetOrderDetails(int orderId)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var model = _context.OrderDetails
+                    .Where(s=>s.OrderId == orderId)
+                    .Select(s => new OrderDetailModel
+                {
+                    OrderId = s.OrderId,
+                    FoodId = s.FoodId,
+                    Quantity = s.Quantity,
+                    UnitPrice = s.UnitPrice,
+                    Note = s.Note,
+                    TotalAmount = s.TotalAmount,
+                    Foods = _context.Foods.Where(a => a.FoodId == s.FoodId).FirstOrDefault(),
+                    Orders = _context.Orders.Where(a=>a.OrderId == s.OrderId).FirstOrDefault(),
+                }).ToList();
+                return Ok(model);
+            }catch(Exception ex)
+            {
+                return StatusCode(500, $"Bị lỗi: {ex.Message}");
+            }
+        }
         /*
                 [HttpPost]
                 public async Task<IActionResult> CreateOrder(CreateOrderDTO orderDTO)
@@ -96,7 +124,9 @@ namespace OrderRestaurant.Controllers
                 {
                     TableId = cartDto.TableId,
                     CreationTime = DateTime.Now,
-                    StatusId = 6,
+                    StatusId = Constants.ORDER_INIT,
+                    Pay = cartDto.TotalAmount,
+                    Note ="",
                 };
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
@@ -121,14 +151,43 @@ namespace OrderRestaurant.Controllers
                 }
                 await _context.SaveChangesAsync();
 
-                return Ok("THÊM VÀO GIỎ THÀNH CÔNG");
+                return Ok("THÊM VÀO GIỎ ĐƠN HÀNG THÀNH CÔNG");
             }
             catch (Exception ex)
             {
                 return StatusCode(500, $"Bị lỗi: {ex.Message}");
             }
         }
-
+        // GET: api/orders/search?type=Order
+        [HttpGet("search")]
+        public async Task<ActionResult<List<Order>>> GetOrdersByType(string type = "Order")
+        {
+            var orders = await _orderRepository.GetSearchType(type);
+            return Ok(orders);
+        }
+        [HttpDelete]
+        [Route("{id}")]
+        public async Task<IActionResult> DeleteOrder (int id)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var model = _context.Orders.FirstOrDefault(i => i.OrderId == id);
+                if(model == null)
+                {
+                    return NotFound("Không tìm thấy mã Order");
+                }
+                _context.Orders.Remove(model);
+                await _context.SaveChangesAsync();
+                return Ok("Xóa thành công");
+            }catch(Exception ex)
+            {
+                return StatusCode(500, $"Bị lỗi: {ex.Message}");
+            }
+        }
 
 
 
@@ -142,7 +201,7 @@ namespace OrderRestaurant.Controllers
             // Kiểm tra xem trạng thái mới có hợp lệ không
             if (!IsValidStatus(newStatus))
                 return BadRequest("Invalid new status");
-            if (newStatus == Constants.ORDER_ACCEPTED)
+            if (newStatus == Constants.ORDER_APPROVE)
             {
                 order.ReceivingTime = DateTime.Now; // Cập nhật thời gian nhận đơn hàng thành thời gian hiện tại
             }
@@ -156,9 +215,8 @@ namespace OrderRestaurant.Controllers
         private bool IsValidStatus(int status)
         {
             // Kiểm tra xem trạng thái mới có trong danh sách hợp lệ không
-            return status == Constants.ORDER_INIT || status == Constants.ORDER_ACCEPTED ||
-                   status == Constants.ORDER_FINISHED || status == Constants.ORDER_CANCEL ||
-                   status == Constants.ORDER_REJECTED;
+            return status == Constants.ORDER_INIT || status == Constants.ORDER_APPROVE ||
+                   status == Constants.ORDER_PAYMENT || status == Constants.ORDER_REFUSE;
         }
     }
 }

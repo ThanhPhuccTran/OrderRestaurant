@@ -8,5 +8,7 @@ namespace OrderRestaurant.Service
         Task<List<Order>> GetAll();
         Task UpdateAsync(Order order);
         Task<Order> GetAsync(int id);
+
+        Task<List<Order>> GetSearchType(string type ="Order");
     }
 }

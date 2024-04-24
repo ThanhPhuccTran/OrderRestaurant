@@ -15,7 +15,7 @@ namespace OrderRestaurant.Model
         public DateTime? CreationTime { get; set; }
         public DateTime? ReceivingTime { get; set; }
         public DateTime? PaymentTime { get; set; }
-        public double? Pay { get; set; }
+        public decimal? Pay { get; set; }
         public string? Note { get; set; }
         public int StatusId { get; set; }
 

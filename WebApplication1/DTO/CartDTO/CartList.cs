@@ -7,6 +7,6 @@ namespace OrderRestaurant.DTO.CartDTO
     {
        public FoodCart Foods { get; set; }
        public int Quantity { get; set; }
-       public decimal TotalAmount { get; set; }
+     //  public decimal TotalAmount { get; set; }
     }
 }
