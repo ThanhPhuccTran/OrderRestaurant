@@ -11,7 +11,7 @@ namespace OrderRestaurant.Controllers
     [ApiController]
     public class CartController : ControllerBase
     {
-        private readonly ApplicationDBContext _context;
+       /* private readonly ApplicationDBContext _context;
         public CartController(ApplicationDBContext context)
         {
             _context = context;
@@ -280,7 +280,7 @@ namespace OrderRestaurant.Controllers
 
             }
         }
-
+*/
 
 
     }
