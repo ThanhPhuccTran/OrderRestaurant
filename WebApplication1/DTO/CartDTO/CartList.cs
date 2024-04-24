@@ -1,12 +1,12 @@
-﻿namespace OrderRestaurant.DTO.CartDTO
+﻿using OrderRestaurant.Data;
+using OrderRestaurant.Model;
+
+namespace OrderRestaurant.DTO.CartDTO
 {
     public class CartList
     {
-        public int TableId { get; set; }
-        public int FoodId { get; set; }
-        public int StatusId { get; set; }
-        public int Quantity { get; set; }
-        public int? EmployeeId { get; set; }
-        public bool IsDelete {  get; set; }
+       public FoodCart Foods { get; set; }
+       public int Quantity { get; set; }
+       public decimal TotalAmount { get; set; }
     }
 }

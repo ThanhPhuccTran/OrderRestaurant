@@ -3,6 +3,6 @@
     public class CreateCartDTO
     {
         public int TableId { get; set; }
-        public int FoodId { get; set; }
+        public List<CartList> Items { get; set; }
     }
 }

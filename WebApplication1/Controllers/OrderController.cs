@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.Cart;
+using OrderRestaurant.DTO.CartDTO;
 using OrderRestaurant.DTO.OrderDetailsDTO;
 using OrderRestaurant.Model;
 using OrderRestaurant.Service;
@@ -81,52 +82,46 @@ namespace OrderRestaurant.Controllers
 
                     }
                 }*/
-        [HttpPost("add/{tableId}")]
-        public async Task<IActionResult> CreateOrderPOSt([FromRoute] int tableId, [FromForm] CartList cartModel)
+        [HttpPost("checkout")]
+        public async Task<IActionResult> CheckOut([FromBody] CreateCartDTO cartDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
-                // Kiểm tra giỏ hàng có null hay không
-                if (cartModel == null || cartModel.Items == null || !cartModel.Items.Any())
-                {
-                    return BadRequest("Giỏ hàng trống hoặc không hợp lệ.");
-                }
-
                 var order = new Order
                 {
-                    TableId = tableId,
+                    TableId = cartDto.TableId,
                     CreationTime = DateTime.Now,
-                    StatusId = 100, // Trạng thái mới
-                    OrderDetails = new List<OrderDetails>()
+                    StatusId = 6,
                 };
-
-                foreach (var item in cartModel.Items)
-                {
-                    var food = await _context.Foods.FindAsync(item.FoodId);
-
-                    // Kiểm tra food null
-                    if (food == null)
-                    {
-                        return BadRequest($"Món ăn với id {item.FoodId} không tồn tại.");
-                    }
-
-                    var TotalPrice = (decimal)(item.Quantity * food.UnitPrice);
-                    var orderDetails = new OrderDetails
-                    {
-                        Quantity = item.Quantity,
-                        UnitPrice = food.UnitPrice,
-                        Note = "", // Bạn có thể xử lý ghi chú ở đây nếu cần
-                        TotalAmount = TotalPrice,
-                        FoodId = food.FoodId,
-                    };
-                    order.OrderDetails.Add(orderDetails);
-                }
-
-                // Thêm order vào context ngoài vòng lặp foreach
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
+                foreach(var item in cartDto.Items)
+                {
+                    var food = await _context.Foods.FindAsync(item.Foods.FoodId);
+                    Console.WriteLine(food);
+                    if (food == null)
+                    {
+                        return NotFound("Không tìm thấy ");
+                    }
+                    var orderDetails = new OrderDetails
+                    {
+                        OrderId = order.OrderId,
+                        Quantity = item.Quantity,
+                        UnitPrice = food.UnitPrice,
+                        Note = "",
+                        TotalAmount = item.Quantity * food.UnitPrice,
+                        FoodId = item.Foods.FoodId
+                    };
+                    _context.OrderDetails.Add(orderDetails);
+                }
+                await _context.SaveChangesAsync();
 
-                return Ok("Xác nhận thành công");
+                return Ok("THÊM VÀO GIỎ THÀNH CÔNG");
             }
             catch (Exception ex)
             {
