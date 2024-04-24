@@ -45,7 +45,6 @@ namespace OrderRestaurant.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-
                 var configs = await _configRepository.SearchConfig(type);
                 return Ok(configs);
             }
