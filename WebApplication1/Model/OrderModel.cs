@@ -1,4 +1,7 @@
 ﻿using OrderRestaurant.Data;
+using OrderRestaurant.DTO.ConfigDTO;
+using OrderRestaurant.DTO.EmployeeDTO;
+using OrderRestaurant.DTO.TableDTO;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace OrderRestaurant.Model
@@ -22,11 +25,11 @@ namespace OrderRestaurant.Model
        
         public Customer? Customers { get; set; }
         
-        public Table? Tables { get; set; }
+      //  public TablesDTO? Tables { get; set; }
         
-        public Employee? Employees { get; set; }
+      //  public EmployeesDTO? Employees { get; set; }
         
-        public ManageStatus? Statuss { get; set; }
+        public ManageStatusDTO? Statuss { get; set; }
 
     }
 }

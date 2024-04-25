@@ -1,9 +1,14 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.Cart;
 using OrderRestaurant.DTO.CartDTO;
+using OrderRestaurant.DTO.ConfigDTO;
+using OrderRestaurant.DTO.EmployeeDTO;
 using OrderRestaurant.DTO.OrderDetailsDTO;
+using OrderRestaurant.DTO.OrderDTO;
+using OrderRestaurant.DTO.TableDTO;
 using OrderRestaurant.Model;
 using OrderRestaurant.Service;
 
@@ -36,12 +41,46 @@ namespace OrderRestaurant.Controllers
                 Pay = s.Pay,
                 Note = s.Note,
                 StatusId = s.StatusId,
-                Employees = _context.Employees.Where(a=>a.EmployeeId == s.EmployeeId).FirstOrDefault(),
-                Statuss = _context.Statuss.Where(a=>a.StatusId == s.StatusId).FirstOrDefault(),
-                Tables = _context.Tables.Where(a=>a.TableId == s.TableId).FirstOrDefault(),
+               /* Employees = _context.Employees
+                            .Where(a => a.EmployeeId == s.EmployeeId)
+                            .Select(o => new EmployeesDTO
+                            {
+                               EmployeeId = o.EmployeeId,
+                               EmployeeName = o.EmployeeName,
+                               Email = o.Email,
+                               Password = o.Password,
+                               Phone = o.Password,
+                               Image = o.Image
+                               
+                            })
+                            .FirstOrDefault(),*/
+                Statuss = _context.Statuss
+                            .Where(a => a.StatusId == s.StatusId)
+                            .Select(o => new ManageStatusDTO
+                            {
+                                StatusId = o.StatusId,
+                                Code = o.Code,
+                                Type = o.Type,
+                                Value = o.Value,
+                                Description = o.Description,
+                            })
+                            .FirstOrDefault(), 
+                /*Tables = _context.Tables.Where(a => a.TableId == s.TableId)
+                            .Select(o => new TablesDTO
+                            {
+                                TableId = o.TableId,
+                                TableName = o.TableName,
+                                Note = o.Note,
+                                QR_id = o.QR_id,
+                                StatusId = o.StatusId
+                            })
+                            .FirstOrDefault(),*/
             }).ToList();
+
             return Ok(model);
         }
+
+
         [HttpGet("get-order-details/{orderId}")]
         public async Task<IActionResult> GetOrderDetails(int orderId)
         {
@@ -61,7 +100,7 @@ namespace OrderRestaurant.Controllers
                     UnitPrice = s.UnitPrice,
                     Note = s.Note,
                     TotalAmount = s.TotalAmount,
-                    Foods = _context.Foods.Where(a => a.FoodId == s.FoodId).FirstOrDefault(),
+                    Foods = _context.Foods.Where(a => a.FoodId == s.FoodId).FirstOrDefault() ?? new Food(),
                     Orders = _context.Orders.Where(a=>a.OrderId == s.OrderId).FirstOrDefault(),
                 }).ToList();
                 return Ok(model);
@@ -175,12 +214,13 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
-                var model = _context.Orders.FirstOrDefault(i => i.OrderId == id);
+                var model = await _context.Orders.Include(o=>o.OrderDetails).FirstOrDefaultAsync(i => i.OrderId == id);
                 if(model == null)
                 {
                     return NotFound("Không tìm thấy mã Order");
                 }
-                _context.Orders.Remove(model);
+                _context.OrderDetails.RemoveRange(model.OrderDetails); //Để xóa list liên quan OrderId
+                _context.Orders.Remove(model); // xóa một cái OrderId
                 await _context.SaveChangesAsync();
                 return Ok("Xóa thành công");
             }catch(Exception ex)
@@ -188,13 +228,105 @@ namespace OrderRestaurant.Controllers
                 return StatusCode(500, $"Bị lỗi: {ex.Message}");
             }
         }
+        [HttpDelete("DeleteOrderDetail/{orderId}/{foodId}")]
+        public async Task<IActionResult> DeleteOrderDetail(int orderId, int foodId)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                // Tìm kiếm OrderDetails cần xóa
+                var orderDetailsToDelete = _context.OrderDetails
+                    .Where(od => od.OrderId == orderId && od.FoodId == foodId)
+                    .ToList();
 
+                // Kiểm tra nếu không tìm thấy OrderDetails
+                if (orderDetailsToDelete.Count == 0)
+                {
+                    return NotFound("Không tìm thấy OrderDetails");
+                }
+
+                // Xóa OrderDetails
+                _context.OrderDetails.RemoveRange(orderDetailsToDelete);
+                // Tính tổng TotalAmount của các OrderDetails còn lại
+                decimal? totalAmount = _context.OrderDetails
+                    .Where(od => od.OrderId == orderId)
+                    .Sum(od => od.TotalAmount);
+
+                // Cập nhật lại trường Pay của Order
+                var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId);
+                if (order != null)
+                {
+                    order.Pay = totalAmount;
+                }
+                await _context.SaveChangesAsync();
+                return Ok("Xóa OrderDetails thành công");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Bị lỗi: {ex.Message}");
+            }
+        }
+
+        [HttpPost("ApproveOrder/{OrderId}/{EmployeeId}")]
+        public async Task<IActionResult> ApproveOrder(int OrderId, int EmployeeId)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var model = await _orderRepository.FindOrder(OrderId);
+                if (model == null)
+                {
+                    return NotFound("Không tìm thấy");
+                }
+
+                if(model.StatusId != Constants.ORDER_INIT)
+                {
+                    return BadRequest("Trạng thái không phải là đơn mới");
+                }
+                model.StatusId = Constants.ORDER_APPROVE;
+                model.EmployeeId = EmployeeId;
+                model.ReceivingTime = DateTime.Now;
+
+
+                var orderDTO = new OrderDTO
+                {
+                    OrderId = model.OrderId,
+                    EmployeeId = model.EmployeeId,
+                    StatusId = model.StatusId,
+                    ReceivingTime = model.ReceivingTime,
+                    ManageStatuss = _context.Statuss
+                        .Where(a => a.StatusId == model.StatusId)
+                        .Select(s => new ManageStatusDTO
+                        {
+                            StatusId = s.StatusId,
+                            Code = s.Code,
+                            Type = s.Type,
+                            Value = s.Value,
+                            Description = s.Description
+                        })
+                        .FirstOrDefault() ?? new ManageStatusDTO(),
+                };
+
+                await _orderRepository.UpdateAsync(model);
+                return Ok(orderDTO);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Bị lỗi: {ex.Message}");
+            }
+        }
 
 
         [HttpPut("ChangeStatus/{id}/{newStatus}")]
         public async Task<IActionResult> ChangeOrderStatus([FromRoute] int id, [FromRoute] int newStatus)
         {
-            var order = await _orderRepository.GetAsync(id);
+            var order = await _orderRepository.FindOrder(id);
             if (order == null)
                 return NotFound();
 

@@ -14,14 +14,16 @@ namespace OrderRestaurant.Responsitory
             _dbContext = dbContext;
         }
 
+        public async Task<Order> FindOrder(int orderId)
+        {
+            return await _dbContext.Orders.FindAsync(orderId);
+        }
+
         public async Task<List<Order>> GetAll()
         {
             return await _dbContext.Orders.ToListAsync();
         }
-        public async Task<Order> GetAsync(int id)
-        {
-            return await _dbContext.Orders.FindAsync(id);
-        }
+       
 
        
 
@@ -55,7 +57,7 @@ namespace OrderRestaurant.Responsitory
 
         public async Task UpdateAsync(Order order)
         {
-            _dbContext.Entry(order).State = EntityState.Modified;
+            _dbContext.Orders.Update(order);
             await _dbContext.SaveChangesAsync();
         }
     }

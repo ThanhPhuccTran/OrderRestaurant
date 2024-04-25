@@ -37,7 +37,7 @@ namespace OrderRestaurant.DTO.TableDTO
             return new Table
             {
                 TableName = table.TableName,
-                StatusId = 8, // Set trạng thái trống
+                StatusId = Constants.TABLE_EMPTY, // Set trạng thái trống
                 Note = note,
                 QR_id = table.QR_id
             };
