@@ -109,46 +109,7 @@ namespace OrderRestaurant.Controllers
                 return StatusCode(500, $"Bị lỗi: {ex.Message}");
             }
         }
-        /*
-                [HttpPost]
-                public async Task<IActionResult> CreateOrder(CreateOrderDTO orderDTO)
-                {
-                    try
-                    {
-                        var order = new Order
-                        {
-                            TableId = orderDTO.TableId,
-                            CreationTime = DateTime.Now,
-                            Note = "",
-                            StatusId = 100 , //Don hang moi tao
-                        };
-                        _context.Orders.Add(order);
-                        await _context.SaveChangesAsync();
-
-                        //Chi tiet don hang
-                        foreach(var item in orderDTO.OrderDetails)
-                        {
-                            var orderDetail = new OrderDetails
-                            {
-                                OrderId = order.OrderId,
-                                FoodId = item.FoodId,
-                                Quantity = item.Quantity,
-                                UnitPrice = item.UnitPrice,
-                                Note = item.Note,
-                            };
-                            _context.OrderDetails.Add(orderDetail);
-                        }
-                        await _context.SaveChangesAsync();
-                        return Ok("Tạo Order thành công");
-
-
-                    }
-                    catch(Exception ex)
-                    {
-                        return StatusCode(500, $"Bị lỗi: {ex.Message}");
-
-                    }
-                }*/
+       
         [HttpPost("checkout")]
         public async Task<IActionResult> CheckOut([FromBody] CreateCartDTO cartDto)
         {
@@ -159,6 +120,16 @@ namespace OrderRestaurant.Controllers
 
             try
             {
+                //check bàn có người hay chưa
+                var table = await _context.Tables.FindAsync(cartDto.TableId);
+                if(table == null)
+                {
+                    return NotFound("Không tìm thấy bàn");
+                }
+                if (table.StatusId == Constants.TABLE_GUESTS)
+                {
+                    return BadRequest("Bàn đã có khách ngồi, không thể đặt bàn .");
+                }
                 var order = new Order
                 {
                     TableId = cartDto.TableId,
@@ -169,7 +140,14 @@ namespace OrderRestaurant.Controllers
                 };
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
-                foreach(var item in cartDto.Items)
+
+                //check bàn chuyển qua trạng thái có người 
+                table.StatusId = Constants.TABLE_GUESTS;
+                await _context.SaveChangesAsync();
+               
+
+
+                foreach (var item in cartDto.Items)
                 {
                     var food = await _context.Foods.FindAsync(item.Foods.FoodId);
                     Console.WriteLine(food);
@@ -321,34 +299,117 @@ namespace OrderRestaurant.Controllers
                 return StatusCode(500, $"Bị lỗi: {ex.Message}");
             }
         }
-
-
-        [HttpPut("ChangeStatus/{id}/{newStatus}")]
-        public async Task<IActionResult> ChangeOrderStatus([FromRoute] int id, [FromRoute] int newStatus)
+        [HttpPost("PaymentOrder/{OrderId}/{EmployeeId}")]
+        public async Task<IActionResult> PaymentOrder(int OrderId, int EmployeeId)
         {
-            var order = await _orderRepository.FindOrder(id);
-            if (order == null)
-                return NotFound();
-
-            // Kiểm tra xem trạng thái mới có hợp lệ không
-            if (!IsValidStatus(newStatus))
-                return BadRequest("Invalid new status");
-            if (newStatus == Constants.ORDER_APPROVE)
+            if (!ModelState.IsValid)
             {
-                order.ReceivingTime = DateTime.Now; // Cập nhật thời gian nhận đơn hàng thành thời gian hiện tại
+                return BadRequest(ModelState);
             }
-            // Thực hiện thay đổi trạng thái
-            order.StatusId = newStatus;
-            await _orderRepository.UpdateAsync(order);
+            try
+            {
+                var model = await _orderRepository.FindOrder(OrderId);
+                if (model == null)
+                {
+                    return NotFound("Không tìm thấy");
+                }
 
-            return Ok(order);
+                if (model.StatusId != Constants.ORDER_APPROVE)
+                {
+                    return BadRequest("Trạng thái không phải là đơn đã duyệt");
+                }
+                model.StatusId = Constants.ORDER_PAYMENT;
+                model.EmployeeId = EmployeeId;
+                model.PaymentTime = DateTime.Now;
+
+                //Thanh toán xong trở về bàn trống
+                var table = await _context.Tables.FindAsync(model.TableId);
+                if (table != null)
+                {
+                    
+                    table.StatusId = Constants.TABLE_EMPTY;
+                    await _context.SaveChangesAsync();
+                }
+
+                var orderDTO = new OrderDTO
+                {
+                    OrderId = model.OrderId,
+                    EmployeeId = model.EmployeeId,
+                    StatusId = model.StatusId,
+                    ReceivingTime = model.ReceivingTime,
+                    PaymentTime = model.PaymentTime,
+                    ManageStatuss = _context.Statuss
+                        .Where(a => a.StatusId == model.StatusId)
+                        .Select(s => new ManageStatusDTO
+                        {
+                            StatusId = s.StatusId,
+                            Code = s.Code,
+                            Type = s.Type,
+                            Value = s.Value,
+                            Description = s.Description
+                        })
+                        .FirstOrDefault() ?? new ManageStatusDTO(),
+                };
+
+                await _orderRepository.UpdateAsync(model);
+                return Ok(orderDTO);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Bị lỗi: {ex.Message}");
+            }
         }
-
-        private bool IsValidStatus(int status)
+        [HttpPost("RefuseOrder/{OrderId}/{EmployeeId}")]
+        public async Task<IActionResult> RefuseOrder(int OrderId, int EmployeeId)
         {
-            // Kiểm tra xem trạng thái mới có trong danh sách hợp lệ không
-            return status == Constants.ORDER_INIT || status == Constants.ORDER_APPROVE ||
-                   status == Constants.ORDER_PAYMENT || status == Constants.ORDER_REFUSE;
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var model = await _orderRepository.FindOrder(OrderId);
+                if (model == null)
+                {
+                    return NotFound("Không tìm thấy");
+                }
+
+                if (model.StatusId != Constants.ORDER_INIT)
+                {
+                    return BadRequest("Trạng thái không phải là đơn đã duyệt");
+                }
+                model.StatusId = Constants.ORDER_REFUSE;
+                model.EmployeeId = EmployeeId;
+
+
+                var orderDTO = new OrderDTO
+                {
+                    OrderId = model.OrderId,
+                    EmployeeId = model.EmployeeId,
+                    StatusId = model.StatusId,
+                    ReceivingTime = model.ReceivingTime,
+                    PaymentTime = model.PaymentTime,
+                    ManageStatuss = _context.Statuss
+                        .Where(a => a.StatusId == model.StatusId)
+                        .Select(s => new ManageStatusDTO
+                        {
+                            StatusId = s.StatusId,
+                            Code = s.Code,
+                            Type = s.Type,
+                            Value = s.Value,
+                            Description = s.Description
+                        })
+                        .FirstOrDefault() ?? new ManageStatusDTO(),
+                };
+
+                await _orderRepository.UpdateAsync(model);
+                return Ok(orderDTO);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Bị lỗi: {ex.Message}");
+            }
         }
+
     }
 }
