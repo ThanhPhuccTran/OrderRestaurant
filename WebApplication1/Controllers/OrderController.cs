@@ -6,6 +6,7 @@ using OrderRestaurant.DTO.Cart;
 using OrderRestaurant.DTO.CartDTO;
 using OrderRestaurant.DTO.ConfigDTO;
 using OrderRestaurant.DTO.EmployeeDTO;
+using OrderRestaurant.DTO.FoodDTO;
 using OrderRestaurant.DTO.OrderDetailsDTO;
 using OrderRestaurant.DTO.OrderDTO;
 using OrderRestaurant.DTO.TableDTO;
@@ -81,6 +82,7 @@ namespace OrderRestaurant.Controllers
                             .FirstOrDefault(),
             }).ToList();
 
+
             return Ok(model);
         }
 
@@ -96,6 +98,9 @@ namespace OrderRestaurant.Controllers
             {
                 var model = _context.OrderDetails
                     .Where(s=>s.OrderId == orderId)
+                    .Include(s => s.Food)
+                    .Include(s => s.Order.Employees)
+                    .Include(s => s.Order.Tables)
                     .Select(s => new OrderDetailModel
                 {
                     OrderId = s.OrderId,
@@ -104,9 +109,42 @@ namespace OrderRestaurant.Controllers
                     UnitPrice = s.UnitPrice,
                     Note = s.Note,
                     TotalAmount = s.TotalAmount,
-                    Foods = _context.Foods.Where(a => a.FoodId == s.FoodId).FirstOrDefault() ?? new Food(),
-                    Orders = _context.Orders.Where(a=>a.OrderId == s.OrderId).FirstOrDefault(),
-                }).ToList();
+                    Foods = _context.Foods.Where(a => a.FoodId == s.FoodId)
+                                           .Select(h=> new FoodsDTO
+                                           {
+                                               FoodId = h.FoodId,
+                                               NameFood = h.NameFood,
+                                               UnitPrice = h.UnitPrice,
+                                               UrlImage = h.UrlImage,
+                                               CategoryId = h.CategoryId
+                                           }).FirstOrDefault() ?? new FoodsDTO(),
+                        Orders = new Order_DetailsDTO
+                        {
+                            OrderId = s.Order.OrderId,
+                            EmployeeId = s.Order.EmployeeId,
+                            TableId = s.Order.TableId,
+                            
+                            Employees = new EmployeesDTO
+                            {
+                                EmployeeId = s.Order.Employees.EmployeeId,
+                                EmployeeName = s.Order.Employees.EmployeeName,
+                                Image = s.Order.Employees.Image,
+                                Phone = s.Order.Employees.Phone,
+                                Email = s.Order.Employees.Email,
+                                Password = s.Order.Employees.Password,
+                            },
+                            Tables = new TablesDTO
+                            {
+                                TableId = s.Order.Tables.TableId,
+                                TableName = s.Order.Tables.TableName,
+                                Code = s.Order.Tables.Code,
+                                Note = s.Order.Tables.Note,
+                                QR_id = s.Order.Tables.QR_id,
+
+                               
+                            }
+                        }
+                    }).ToList();
                 return Ok(model);
             }catch(Exception ex)
             {
