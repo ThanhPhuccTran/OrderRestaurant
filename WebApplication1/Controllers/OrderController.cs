@@ -11,6 +11,7 @@ using OrderRestaurant.DTO.OrderDTO;
 using OrderRestaurant.DTO.TableDTO;
 using OrderRestaurant.Model;
 using OrderRestaurant.Service;
+using System.Globalization;
 
 namespace OrderRestaurant.Controllers
 {
@@ -30,8 +31,11 @@ namespace OrderRestaurant.Controllers
         [HttpGet("get-order-all")]
         public async Task<IActionResult> GetAll()
         {
+
+
             var model = _context.Orders.Select(s => new OrderModel
             {
+
                 OrderId = s.OrderId,
                 EmployeeId = s.EmployeeId,
                 TableId = s.TableId,
@@ -40,22 +44,22 @@ namespace OrderRestaurant.Controllers
                 PaymentTime = s.PaymentTime,
                 Pay = s.Pay,
                 Note = s.Note,
-                StatusId = s.StatusId,
-               /* Employees = _context.Employees
+                Code = s.Code,
+                Employees = _context.Employees
                             .Where(a => a.EmployeeId == s.EmployeeId)
                             .Select(o => new EmployeesDTO
                             {
-                               EmployeeId = o.EmployeeId,
-                               EmployeeName = o.EmployeeName,
-                               Email = o.Email,
-                               Password = o.Password,
-                               Phone = o.Password,
-                               Image = o.Image
-                               
+                                EmployeeId = o.EmployeeId,
+                                EmployeeName = o.EmployeeName,
+                                Email = o.Email,
+                                Password = o.Password,
+                                Phone = o.Password,
+                                Image = o.Image
+
                             })
-                            .FirstOrDefault(),*/
+                            .FirstOrDefault(),
                 Statuss = _context.Statuss
-                            .Where(a => a.StatusId == s.StatusId)
+                            .Where(a => a.Code == s.Code && a.Type == "Order")
                             .Select(o => new ManageStatusDTO
                             {
                                 StatusId = o.StatusId,
@@ -64,17 +68,17 @@ namespace OrderRestaurant.Controllers
                                 Value = o.Value,
                                 Description = o.Description,
                             })
-                            .FirstOrDefault(), 
-                /*Tables = _context.Tables.Where(a => a.TableId == s.TableId)
+                            .FirstOrDefault(),
+                Tables = _context.Tables.Where(a => a.TableId == s.TableId)
                             .Select(o => new TablesDTO
                             {
                                 TableId = o.TableId,
                                 TableName = o.TableName,
                                 Note = o.Note,
                                 QR_id = o.QR_id,
-                                StatusId = o.StatusId
+                                Code = o.Code
                             })
-                            .FirstOrDefault(),*/
+                            .FirstOrDefault(),
             }).ToList();
 
             return Ok(model);
@@ -120,33 +124,29 @@ namespace OrderRestaurant.Controllers
 
             try
             {
-                //check bàn có người hay chưa
-                var table = await _context.Tables.FindAsync(cartDto.TableId);
-                if(table == null)
-                {
-                    return NotFound("Không tìm thấy bàn");
-                }
-                if (table.StatusId == Constants.TABLE_GUESTS)
-                {
-                    return BadRequest("Bàn đã có khách ngồi, không thể đặt bàn .");
-                }
+               
                 var order = new Order
                 {
                     TableId = cartDto.TableId,
                     CreationTime = DateTime.Now,
-                    StatusId = Constants.ORDER_INIT,
+                    Code = Constants.ORDER_INIT,
                     Pay = cartDto.TotalAmount,
                     Note ="",
                 };
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
-
-                //check bàn chuyển qua trạng thái có người 
-                table.StatusId = Constants.TABLE_GUESTS;
-                await _context.SaveChangesAsync();
-               
-
-
+                //check bàn có người hay chưa
+                var table = await _context.Tables.FindAsync(cartDto.TableId);
+                if (table == null)
+                {
+                    return NotFound("Không tìm thấy bàn");
+                }
+                else
+                {
+                    //check bàn chuyển qua trạng thái có người 
+                    table.Code = Constants.TABLE_GUESTS;
+                    await _context.SaveChangesAsync();
+                }
                 foreach (var item in cartDto.Items)
                 {
                     var food = await _context.Foods.FindAsync(item.Foods.FoodId);
@@ -175,13 +175,13 @@ namespace OrderRestaurant.Controllers
                 return StatusCode(500, $"Bị lỗi: {ex.Message}");
             }
         }
-        // GET: api/orders/search?type=Order
+       /* // GET: api/orders/search?type=Order
         [HttpGet("search")]
         public async Task<ActionResult<List<Order>>> GetOrdersByType(string type = "Order")
         {
             var orders = await _orderRepository.GetSearchType(type);
             return Ok(orders);
-        }
+        }*/
         [HttpDelete]
         [Route("{id}")]
         public async Task<IActionResult> DeleteOrder (int id)
@@ -263,11 +263,11 @@ namespace OrderRestaurant.Controllers
                     return NotFound("Không tìm thấy");
                 }
 
-                if(model.StatusId != Constants.ORDER_INIT)
+                if(model.Code != Constants.ORDER_INIT)
                 {
                     return BadRequest("Trạng thái không phải là đơn mới");
                 }
-                model.StatusId = Constants.ORDER_APPROVE;
+                model.Code = Constants.ORDER_APPROVE;
                 model.EmployeeId = EmployeeId;
                 model.ReceivingTime = DateTime.Now;
 
@@ -276,10 +276,10 @@ namespace OrderRestaurant.Controllers
                 {
                     OrderId = model.OrderId,
                     EmployeeId = model.EmployeeId,
-                    StatusId = model.StatusId,
+                    Code = model.Code,
                     ReceivingTime = model.ReceivingTime,
                     ManageStatuss = _context.Statuss
-                        .Where(a => a.StatusId == model.StatusId)
+                        .Where(a => a.Code == model.Code && a.Type == "Order")
                         .Select(s => new ManageStatusDTO
                         {
                             StatusId = s.StatusId,
@@ -314,11 +314,11 @@ namespace OrderRestaurant.Controllers
                     return NotFound("Không tìm thấy");
                 }
 
-                if (model.StatusId != Constants.ORDER_APPROVE)
+                if (model.Code != Constants.ORDER_APPROVE)
                 {
                     return BadRequest("Trạng thái không phải là đơn đã duyệt");
                 }
-                model.StatusId = Constants.ORDER_PAYMENT;
+                model.Code = Constants.ORDER_PAYMENT;
                 model.EmployeeId = EmployeeId;
                 model.PaymentTime = DateTime.Now;
 
@@ -327,7 +327,7 @@ namespace OrderRestaurant.Controllers
                 if (table != null)
                 {
                     
-                    table.StatusId = Constants.TABLE_EMPTY;
+                    table.Code = Constants.TABLE_EMPTY;
                     await _context.SaveChangesAsync();
                 }
 
@@ -335,11 +335,11 @@ namespace OrderRestaurant.Controllers
                 {
                     OrderId = model.OrderId,
                     EmployeeId = model.EmployeeId,
-                    StatusId = model.StatusId,
+                    Code = model.Code,
                     ReceivingTime = model.ReceivingTime,
                     PaymentTime = model.PaymentTime,
                     ManageStatuss = _context.Statuss
-                        .Where(a => a.StatusId == model.StatusId)
+                        .Where(a => a.Code == model.Code)
                         .Select(s => new ManageStatusDTO
                         {
                             StatusId = s.StatusId,
@@ -374,23 +374,29 @@ namespace OrderRestaurant.Controllers
                     return NotFound("Không tìm thấy");
                 }
 
-                if (model.StatusId != Constants.ORDER_INIT)
+                if (model.Code != Constants.ORDER_INIT)
                 {
                     return BadRequest("Trạng thái không phải là đơn đã duyệt");
                 }
-                model.StatusId = Constants.ORDER_REFUSE;
+                model.Code = Constants.ORDER_REFUSE;
                 model.EmployeeId = EmployeeId;
+                var table = await _context.Tables.FindAsync(model.TableId);
+                if (table != null)
+                {
 
+                    table.Code = Constants.TABLE_EMPTY;
+                    await _context.SaveChangesAsync();
+                }
 
                 var orderDTO = new OrderDTO
                 {
                     OrderId = model.OrderId,
                     EmployeeId = model.EmployeeId,
-                    StatusId = model.StatusId,
+                    Code= model.Code,
                     ReceivingTime = model.ReceivingTime,
                     PaymentTime = model.PaymentTime,
                     ManageStatuss = _context.Statuss
-                        .Where(a => a.StatusId == model.StatusId)
+                        .Where(a => a.Code == model.Code && a.Type == "Order")
                         .Select(s => new ManageStatusDTO
                         {
                             StatusId = s.StatusId,
@@ -408,6 +414,47 @@ namespace OrderRestaurant.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, $"Bị lỗi: {ex.Message}");
+            }
+        }
+        //Tổng tiền trong ngày
+
+        [HttpGet("revenue-by-day/{date}")]
+        public IActionResult GetRevenueByDay(int date)
+        {
+            try
+            {
+                var dailyRevenue = _context.Orders
+                    .Where(o => o.Code == 3 &&
+                           o.PaymentTime != null &&
+                           o.PaymentTime.Value.Day == date)
+                    .Sum(o => o.Pay);
+
+                return Ok(dailyRevenue);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error: {ex.Message}");
+            }
+        }
+        //Tính tổng tiền theo tháng năm
+        [HttpGet("revenue-by-month/{year}/{month}")]
+        public IActionResult GetRevenueByMonth(int year, int month)
+        {
+            try
+            {
+                if(month>12 || month < 0)
+                {
+                    return BadRequest("Số tháng không hợp lệ");
+                }
+                var monthlyRevenue = _context.Orders
+                    .Where(o => o.Code == 3 && o.PaymentTime.Value.Year == year && o.PaymentTime.Value.Month == month)
+                    .Sum(o => o.Pay);
+
+                return Ok(monthlyRevenue);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error: {ex.Message}");
             }
         }
 
