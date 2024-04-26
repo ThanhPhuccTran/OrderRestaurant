@@ -123,6 +123,7 @@ namespace OrderRestaurant.Controllers
                             OrderId = s.Order.OrderId,
                             EmployeeId = s.Order.EmployeeId,
                             TableId = s.Order.TableId,
+
                             Code = s.Order.Code,
                             Pay = s.Order.Pay,
                             CreationTime = s.Order.CreationTime,
@@ -130,7 +131,6 @@ namespace OrderRestaurant.Controllers
                             ReceivingTime = s.Order.ReceivingTime,
                             Note = s.Note,
                             CustormerId = s.Order.CustomerId,
-                            
                             Employees = new EmployeesDTO
                             {
                                 EmployeeId = s.Order.Employees.EmployeeId,
