@@ -41,7 +41,7 @@ namespace OrderRestaurant.Responsitory
 
         public async Task<(int totalItems, int totalPages, List<Table> tables)> GetSearch(QuerryObject querry, string search = "")
         {
-            var list = _dbContext.Tables.Include(f=>f.Statuss).AsQueryable();
+            var list = _dbContext.Tables.AsQueryable();
             if (!string.IsNullOrWhiteSpace(search))
             {
                 list = list.Where(f => EF.Functions.Like(f.TableName, $"%{search}%"));
@@ -57,8 +57,8 @@ namespace OrderRestaurant.Responsitory
                 TableName = f.TableName,
                 Note = f.Note,
                 QR_id = f.QR_id,
-                StatusId = f.StatusId,
-                Statuss = f.Statuss
+                Code = f.Code,
+               /* Statuss = f.Statuss*/
             }).Skip(skipNumber)
                 .Take(querry.PageSize)
                 .ToListAsync();
@@ -86,7 +86,7 @@ namespace OrderRestaurant.Responsitory
             string note = string.IsNullOrWhiteSpace(tableDTO.Note) ? "" : tableDTO.Note;
             tableUpdate.TableName = tableDTO.TableName;
             tableUpdate.Note = note;
-            tableUpdate.StatusId = tableDTO.StatusId;
+            tableUpdate.Code = tableDTO.StatusId;
             tableUpdate.QR_id = tableDTO.QR_id;
            /* if (tableDTO.QR_id.Length > 0)
             {

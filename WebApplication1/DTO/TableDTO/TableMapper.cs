@@ -11,7 +11,7 @@ namespace OrderRestaurant.DTO.TableDTO
             {
                 TableId = table.TableId,
                 TableName = table.TableName,
-                StatusId = table.StatusId,
+                Code = table.Code,
                 Note = table.Note,
                 QR_id = table.QR_id,
                 
@@ -37,7 +37,7 @@ namespace OrderRestaurant.DTO.TableDTO
             return new Table
             {
                 TableName = table.TableName,
-                StatusId = Constants.TABLE_EMPTY, // Set trạng thái trống
+                Code = Constants.TABLE_EMPTY, // Set trạng thái trống
                 Note = note,
                 QR_id = table.QR_id
             };

@@ -14,9 +14,10 @@ namespace OrderRestaurant.Data
         public string Value { get; set; }
         public string Description { get; set; }
         
-        public List<Order> Orders { get; set; }
+      /*  public List<Order> Orders { get; set; }
         
-        public List<Table> Tables { get; set; }
+        public List<Table> Tables { get; set; }*/
+
        /* public List<Cart> Carts { get; set; }*/
 
     }

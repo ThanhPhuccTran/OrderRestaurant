@@ -20,7 +20,7 @@ namespace OrderRestaurant.Data
         public decimal? Pay {  get; set; }
         public string? Note { get; set; }
         
-        public int StatusId { get; set; }
+        public int Code { get; set; }
 
         [ForeignKey("CustomerId ")]
         public Customer? Customers { get; set; }
@@ -28,8 +28,10 @@ namespace OrderRestaurant.Data
         public Table? Tables { get; set; }
         [ForeignKey("EmployeeId")]
         public Employee? Employees { get; set; }
-        [ForeignKey("StatusId")]
-        public ManageStatus? Statuss { get; set; }
+        /*[ForeignKey("StatusId")]
+        public ManageStatus? Statuss { get; set; }*/
         public List<OrderDetails> OrderDetails { get; set; } 
+
+
     }
 }

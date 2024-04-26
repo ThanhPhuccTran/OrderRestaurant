@@ -1,4 +1,5 @@
-﻿using OrderRestaurant.Data;
+﻿using Newtonsoft.Json;
+using OrderRestaurant.Data;
 using OrderRestaurant.DTO.ConfigDTO;
 using OrderRestaurant.DTO.EmployeeDTO;
 using OrderRestaurant.DTO.TableDTO;
@@ -20,15 +21,17 @@ namespace OrderRestaurant.Model
         public DateTime? PaymentTime { get; set; }
         public decimal? Pay { get; set; }
         public string? Note { get; set; }
-        public int StatusId { get; set; }
-
-       
+        public int Code { get; set; }
+        
+       /* public string FormattedCreationTime => CreationTime?.ToString("dd-MM-yyyy");
+        public string FormattedReceivingTime => ReceivingTime.HasValue ? ReceivingTime.Value.ToString("dd-MM-yyyy") : "";
+        public string FormattedPaymentTime => PaymentTime.HasValue ? PaymentTime.Value.ToString("dd-MM-yyyy") : "";*/
         public Customer? Customers { get; set; }
-        
-      //  public TablesDTO? Tables { get; set; }
-        
-      //  public EmployeesDTO? Employees { get; set; }
-        
+
+        public TablesDTO? Tables { get; set; }
+
+        public EmployeesDTO? Employees { get; set; }
+
         public ManageStatusDTO? Statuss { get; set; }
 
     }
