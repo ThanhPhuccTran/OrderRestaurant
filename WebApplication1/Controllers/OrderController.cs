@@ -123,6 +123,13 @@ namespace OrderRestaurant.Controllers
                             OrderId = s.Order.OrderId,
                             EmployeeId = s.Order.EmployeeId,
                             TableId = s.Order.TableId,
+                            Code = s.Order.Code,
+                            Pay = s.Order.Pay,
+                            CreationTime = s.Order.CreationTime,
+                            PaymentTime = s.Order.PaymentTime,
+                            ReceivingTime = s.Order.ReceivingTime,
+                            Note = s.Note,
+                            CustormerId = s.Order.CustomerId,
                             
                             Employees = new EmployeesDTO
                             {
@@ -266,16 +273,17 @@ namespace OrderRestaurant.Controllers
 
                 // Xóa OrderDetails
                 _context.OrderDetails.RemoveRange(orderDetailsToDelete);
-                // Tính tổng TotalAmount của các OrderDetails còn lại
-                decimal? totalAmount = _context.OrderDetails
-                    .Where(od => od.OrderId == orderId)
-                    .Sum(od => od.TotalAmount);
+                // Tính tổng TotalAmount của các OrderDetails cần xóa
+                decimal? deletedAmount = orderDetailsToDelete.Sum(od => od.TotalAmount);
+
+                // Xóa OrderDetails
+                _context.OrderDetails.RemoveRange(orderDetailsToDelete);
 
                 // Cập nhật lại trường Pay của Order
                 var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId);
                 if (order != null)
                 {
-                    order.Pay = totalAmount;
+                    order.Pay = order.Pay -  deletedAmount; 
                 }
                 await _context.SaveChangesAsync();
                 return Ok("Xóa OrderDetails thành công");
@@ -285,6 +293,55 @@ namespace OrderRestaurant.Controllers
                 return StatusCode(500, $"Bị lỗi: {ex.Message}");
             }
         }
+        [HttpPut("UpdateOrderDetail/{orderId}/{foodId}")]
+        public async Task<IActionResult> UpdateOrderDetail(int orderId, int foodId, [FromBody] OrderDetailUpdateDto orderDetailDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                
+                var orderDetailToUpdate = await _context.OrderDetails.FirstOrDefaultAsync(od => od.OrderId == orderId && od.FoodId == foodId);
+
+                
+                if (orderDetailToUpdate == null)
+                {
+                    return NotFound("Không tìm thấy");
+                }
+
+                //Lấy giá tiền của FoodId
+                var foodPrice = await _context.Foods.Where(f=>f.FoodId==foodId).Select(f=>f.UnitPrice).FirstOrDefaultAsync();
+                // Cập nhật thông tin của OrderDetail
+                orderDetailToUpdate.Quantity = orderDetailDto.Quantity;
+
+                orderDetailToUpdate.Note = orderDetailDto.Note;
+
+                // tính tổng tiền
+                orderDetailToUpdate.TotalAmount = orderDetailDto.Quantity*foodPrice;
+
+                // Lấy tổng số tiền của các OrderDetail còn lại của Order
+                decimal? totalAmount = _context.OrderDetails
+                    .Where(od => od.OrderId == orderId && od.FoodId != foodId)
+                    .Sum(od => od.TotalAmount);
+                // Cập nhật lại trường Pay của Order
+                var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId);
+                if (order != null)
+                {
+                    order.Pay = totalAmount + orderDetailToUpdate.TotalAmount;
+                }
+
+                await _context.SaveChangesAsync();
+                return Ok("Cập nhật OrderDetail thành công");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Bị lỗi: {ex.Message}");
+            }
+        }
+
 
         [HttpPost("ApproveOrder/{OrderId}/{EmployeeId}")]
         public async Task<IActionResult> ApproveOrder(int OrderId, int EmployeeId)
