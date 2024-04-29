@@ -193,6 +193,7 @@ namespace OrderRestaurant.Controllers
                             OrderId = s.Order.OrderId,
                             EmployeeId = s.Order.EmployeeId,
                             TableId = s.Order.TableId,
+
                             Code = s.Order.Code,
                             Pay = s.Order.Pay,
                             CreationTime = s.Order.CreationTime,
@@ -200,6 +201,25 @@ namespace OrderRestaurant.Controllers
                             ReceivingTime = s.Order.ReceivingTime,
                             Note = s.Note,
                             CustormerId = s.Order.CustomerId,
+<<<<<<< HEAD
+=======
+                            Employees = new EmployeesDTO
+                            {
+                                EmployeeId = s.Order.Employees.EmployeeId,
+                                EmployeeName = s.Order.Employees.EmployeeName,
+                                Image = s.Order.Employees.Image,
+                                Phone = s.Order.Employees.Phone,
+                                Email = s.Order.Employees.Email,
+                                Password = s.Order.Employees.Password,
+                            },
+                            Tables = new TablesDTO
+                            {
+                                TableId = s.Order.Tables.TableId,
+                                TableName = s.Order.Tables.TableName,
+                                Code = s.Order.Tables.Code,
+                                Note = s.Order.Tables.Note,
+                                QR_id = s.Order.Tables.QR_id,
+>>>>>>> 6ada6d35fd18ed6979e48898069866d536d12103
 
                             Employees = s.Order.Employees != null ? new EmployeesDTO
                                     {
