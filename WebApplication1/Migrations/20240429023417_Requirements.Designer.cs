@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OrderRestaurant.Data;
 
@@ -11,9 +12,11 @@ using OrderRestaurant.Data;
 namespace OrderRestaurant.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240429023417_Requirements")]
+    partial class Requirements
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -252,8 +255,6 @@ namespace OrderRestaurant.Migrations
 
                     b.HasKey("RequestId");
 
-                    b.HasIndex("TableId");
-
                     b.ToTable("Requirements");
                 });
 
@@ -274,11 +275,21 @@ namespace OrderRestaurant.Migrations
                     b.Property<string>("QR_id")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("RequirementsRequestId")
+                        .HasColumnType("int");
+
                     b.Property<string>("TableName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("TablesTableId")
+                        .HasColumnType("int");
+
                     b.HasKey("TableId");
+
+                    b.HasIndex("RequirementsRequestId");
+
+                    b.HasIndex("TablesTableId");
 
                     b.ToTable("Table");
                 });
@@ -334,13 +345,15 @@ namespace OrderRestaurant.Migrations
                     b.Navigation("Order");
                 });
 
-            modelBuilder.Entity("OrderRestaurant.Data.Requirements", b =>
+            modelBuilder.Entity("OrderRestaurant.Data.Table", b =>
                 {
+                    b.HasOne("OrderRestaurant.Data.Requirements", null)
+                        .WithMany("Tables")
+                        .HasForeignKey("RequirementsRequestId");
+
                     b.HasOne("OrderRestaurant.Data.Table", "Tables")
-                        .WithMany("Requirements")
-                        .HasForeignKey("TableId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany()
+                        .HasForeignKey("TablesTableId");
 
                     b.Navigation("Tables");
                 });
@@ -370,11 +383,14 @@ namespace OrderRestaurant.Migrations
                     b.Navigation("OrderDetails");
                 });
 
+            modelBuilder.Entity("OrderRestaurant.Data.Requirements", b =>
+                {
+                    b.Navigation("Tables");
+                });
+
             modelBuilder.Entity("OrderRestaurant.Data.Table", b =>
                 {
                     b.Navigation("Orders");
-
-                    b.Navigation("Requirements");
                 });
 #pragma warning restore 612, 618
         }
