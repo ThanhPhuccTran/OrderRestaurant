@@ -14,6 +14,8 @@ namespace OrderRestaurant.Data
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Table> Tables { get; set; }
         public DbSet<ManageStatus> Statuss { get; set; }
+        public DbSet<Requirements> Requests { get; set; }
+
        // public DbSet<Cart> CartUser { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

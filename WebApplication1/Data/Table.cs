@@ -16,8 +16,9 @@ namespace OrderRestaurant.Data
        /* [ForeignKey("StatusId")]
         public ManageStatus? Statuss { get; set; }*/
         public List<Order> Orders { get; set; }
-      /*  public List<Cart> Carts { get; set; }
-*/
-       
+        public List<Requirements> Requirements { get; set; }
+        /*  public List<Cart> Carts { get; set; }
+  */
+
     }
 }
