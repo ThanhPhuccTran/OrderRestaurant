@@ -157,96 +157,78 @@ namespace OrderRestaurant.Controllers
         }
 
 
-        [HttpGet("get-order-details/{orderId}")]
-        public async Task<IActionResult> GetOrderDetails(int orderId)
-        {
-            if (!ModelState.IsValid)
+       [HttpGet("get-order-details/{orderId}")]
+public async Task<IActionResult> GetOrderDetails(int orderId)
+{
+    if (!ModelState.IsValid)
+    {
+        return BadRequest(ModelState);
+    }
+    try
+    {
+        var model = _context.OrderDetails
+            .Where(s => s.OrderId == orderId)
+            .Include(s => s.Food)
+            .Include(s => s.Order.Employees)
+            .Include(s => s.Order.Tables)
+            .Select(s => new OrderDetailModel
             {
-                return BadRequest(ModelState);
-            }
-            try
-            {
-                var model = _context.OrderDetails
-                    .Where(s => s.OrderId == orderId)
-                    .Include(s => s.Food)
-                    .Include(s => s.Order.Employees)
-                    .Include(s => s.Order.Tables)
-                    .Select(s => new OrderDetailModel
+                OrderId = s.OrderId,
+                FoodId = s.FoodId,
+                Quantity = s.Quantity,
+                UnitPrice = s.UnitPrice,
+                Note = s.Note,
+                TotalAmount = s.TotalAmount,
+                Foods = _context.Foods.Where(a => a.FoodId == s.FoodId)
+                                   .Select(h => new FoodsDTO
+                                   {
+                                       FoodId = h.FoodId,
+                                       NameFood = h.NameFood,
+                                       UnitPrice = h.UnitPrice,
+                                       UrlImage = h.UrlImage,
+                                       CategoryId = h.CategoryId
+                                   }).FirstOrDefault() ?? new FoodsDTO(),
+                Orders = new Order_DetailsDTO
+                {
+                    OrderId = s.Order.OrderId,
+                    EmployeeId = s.Order.EmployeeId,
+                    TableId = s.Order.TableId,
+                    Code = s.Order.Code,
+                    Pay = s.Order.Pay,
+                    CreationTime = s.Order.CreationTime,
+                    PaymentTime = s.Order.PaymentTime,
+                    ReceivingTime = s.Order.ReceivingTime,
+                    Note = s.Note,
+                    CustormerId = s.Order.CustomerId,
+
+                    Employees = new EmployeesDTO
                     {
-                        OrderId = s.OrderId,
-                        FoodId = s.FoodId,
-                        Quantity = s.Quantity,
-                        UnitPrice = s.UnitPrice,
-                        Note = s.Note,
-                        TotalAmount = s.TotalAmount,
-                        Foods = _context.Foods.Where(a => a.FoodId == s.FoodId)
-                                               .Select(h => new FoodsDTO
-                                               {
-                                                   FoodId = h.FoodId,
-                                                   NameFood = h.NameFood,
-                                                   UnitPrice = h.UnitPrice,
-                                                   UrlImage = h.UrlImage,
-                                                   CategoryId = h.CategoryId
-                                               }).FirstOrDefault() ?? new FoodsDTO(),
-                        Orders = new Order_DetailsDTO
-                        {
-                            OrderId = s.Order.OrderId,
-                            EmployeeId = s.Order.EmployeeId,
-                            TableId = s.Order.TableId,
+                        EmployeeId = s.Order.Employees.EmployeeId,
+                        EmployeeName = s.Order.Employees.EmployeeName,
+                        Image = s.Order.Employees.Image,
+                        Phone = s.Order.Employees.Phone,
+                        Email = s.Order.Employees.Email,
+                        Password = s.Order.Employees.Password,
+                    },
+                    Tables = new TablesDTO
+                    {
+                        TableId = s.Order.Tables.TableId,
+                        TableName = s.Order.Tables.TableName,
+                        Code = s.Order.Tables.Code,
+                        Note = s.Order.Tables.Note,
+                        QR_id = s.Order.Tables.QR_id,
 
-                            Code = s.Order.Code,
-                            Pay = s.Order.Pay,
-                            CreationTime = s.Order.CreationTime,
-                            PaymentTime = s.Order.PaymentTime,
-                            ReceivingTime = s.Order.ReceivingTime,
-                            Note = s.Note,
-                            CustormerId = s.Order.CustomerId,
-<<<<<<< HEAD
-=======
-                            Employees = new EmployeesDTO
-                            {
-                                EmployeeId = s.Order.Employees.EmployeeId,
-                                EmployeeName = s.Order.Employees.EmployeeName,
-                                Image = s.Order.Employees.Image,
-                                Phone = s.Order.Employees.Phone,
-                                Email = s.Order.Employees.Email,
-                                Password = s.Order.Employees.Password,
-                            },
-                            Tables = new TablesDTO
-                            {
-                                TableId = s.Order.Tables.TableId,
-                                TableName = s.Order.Tables.TableName,
-                                Code = s.Order.Tables.Code,
-                                Note = s.Order.Tables.Note,
-                                QR_id = s.Order.Tables.QR_id,
->>>>>>> 6ada6d35fd18ed6979e48898069866d536d12103
 
-                            Employees = s.Order.Employees != null ? new EmployeesDTO
-                                    {
-                                        EmployeeId = s.Order.Employees.EmployeeId,
-                                        EmployeeName = s.Order.Employees.EmployeeName,
-                                        Image = s.Order.Employees.Image,
-                                        Phone = s.Order.Employees.Phone,
-                                        Email = s.Order.Employees.Email,
-                                        Password = s.Order.Employees.Password,
-                                    } : null,
-                            Tables = new TablesDTO
-                                    {
-                                        TableId = s.Order.Tables.TableId,
-                                        TableName = s.Order.Tables.TableName,
-                                        Code = s.Order.Tables.Code,
-                                        Note = s.Order.Tables.Note,
-                                        QR_id = s.Order.Tables.QR_id,
-                                    }
-                        }
-                    }).ToList();
-                return Ok(model);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Bị lỗi: {ex.Message}");
-            }
-        }
+                    }
+                }
+            }).ToList();
+        return Ok(model);
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"Bị lỗi: {ex.Message}");
+    }
+}
 
 
         [HttpPost("checkout")]
