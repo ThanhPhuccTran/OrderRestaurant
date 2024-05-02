@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.CategoryDTO;
@@ -43,6 +44,7 @@ namespace OrderRestaurant.Controllers
 
 
         [HttpGet]
+        [Authorize(Roles = "employee, admin")]
         public async Task<IActionResult> GetCategoryAll()
         {
             if (!ModelState.IsValid)
@@ -55,6 +57,7 @@ namespace OrderRestaurant.Controllers
         }
         [HttpGet]
         [Route("{id:int}")]
+        [Authorize(Roles = "employee, admin")]
         public async Task<IActionResult> GetCategoryById([FromRoute] int id)
         {
             if (!ModelState.IsValid)
@@ -70,6 +73,7 @@ namespace OrderRestaurant.Controllers
         }
         [HttpPut]
         [Route("{id:int}")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateCategory([FromRoute] int id, [FromBody] UpdateCategoryDTO updateCategory)
         {
             var model = await _category.UpdateCategory(id, updateCategory);

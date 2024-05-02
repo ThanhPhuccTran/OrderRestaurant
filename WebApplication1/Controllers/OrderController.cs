@@ -28,7 +28,7 @@ namespace OrderRestaurant.Controllers
             _context = context;
         }
         [HttpGet("get-search-all")]
-        public async Task<IActionResult> Search( int page = 1, int pageSize = 10)
+        public async Task<IActionResult> Search(int page = 1, int pageSize = 10)
         {
             if (!ModelState.IsValid)
             {
@@ -91,7 +91,7 @@ namespace OrderRestaurant.Controllers
 
                 return Ok(model);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return StatusCode(500, $"Bị lỗi: {ex.Message}");
             }
@@ -105,18 +105,18 @@ namespace OrderRestaurant.Controllers
             var model = _context.Orders
                 .OrderByDescending(s => s.CreationTime)
                 .Select(s => new OrderModel
-            {
+                {
 
-                OrderId = s.OrderId,
-                EmployeeId = s.EmployeeId,
-                TableId = s.TableId,
-                CreationTime = s.CreationTime,
-                ReceivingTime = s.ReceivingTime,
-                PaymentTime = s.PaymentTime,
-                Pay = s.Pay,
-                Note = s.Note,
-                Code = s.Code,
-                Employees = _context.Employees
+                    OrderId = s.OrderId,
+                    EmployeeId = s.EmployeeId,
+                    TableId = s.TableId,
+                    CreationTime = s.CreationTime,
+                    ReceivingTime = s.ReceivingTime,
+                    PaymentTime = s.PaymentTime,
+                    Pay = s.Pay,
+                    Note = s.Note,
+                    Code = s.Code,
+                    Employees = _context.Employees
                             .Where(a => a.EmployeeId == s.EmployeeId)
                             .Select(o => new EmployeesDTO
                             {
@@ -129,7 +129,7 @@ namespace OrderRestaurant.Controllers
 
                             })
                             .FirstOrDefault(),
-                Statuss = _context.Statuss
+                    Statuss = _context.Statuss
                             .Where(a => a.Code == s.Code && a.Type == "Order")
                             .Select(o => new ManageStatusDTO
                             {
@@ -140,7 +140,7 @@ namespace OrderRestaurant.Controllers
                                 Description = o.Description,
                             })
                             .FirstOrDefault(),
-                Tables = _context.Tables.Where(a => a.TableId == s.TableId)
+                    Tables = _context.Tables.Where(a => a.TableId == s.TableId)
                             .Select(o => new TablesDTO
                             {
                                 TableId = o.TableId,
@@ -150,7 +150,7 @@ namespace OrderRestaurant.Controllers
                                 Code = o.Code
                             })
                             .FirstOrDefault(),
-            }).ToList();
+                }).ToList();
 
 
             return Ok(model);
@@ -180,20 +180,19 @@ namespace OrderRestaurant.Controllers
                         Note = s.Note,
                         TotalAmount = s.TotalAmount,
                         Foods = _context.Foods.Where(a => a.FoodId == s.FoodId)
-                                               .Select(h => new FoodsDTO
-                                               {
-                                                   FoodId = h.FoodId,
-                                                   NameFood = h.NameFood,
-                                                   UnitPrice = h.UnitPrice,
-                                                   UrlImage = h.UrlImage,
-                                                   CategoryId = h.CategoryId
-                                               }).FirstOrDefault() ?? new FoodsDTO(),
+                                           .Select(h => new FoodsDTO
+                                           {
+                                               FoodId = h.FoodId,
+                                               NameFood = h.NameFood,
+                                               UnitPrice = h.UnitPrice,
+                                               UrlImage = h.UrlImage,
+                                               CategoryId = h.CategoryId
+                                           }).FirstOrDefault() ?? new FoodsDTO(),
                         Orders = new Order_DetailsDTO
                         {
                             OrderId = s.Order.OrderId,
                             EmployeeId = s.Order.EmployeeId,
                             TableId = s.Order.TableId,
-
                             Code = s.Order.Code,
                             Pay = s.Order.Pay,
                             CreationTime = s.Order.CreationTime,
@@ -201,8 +200,7 @@ namespace OrderRestaurant.Controllers
                             ReceivingTime = s.Order.ReceivingTime,
                             Note = s.Note,
                             CustormerId = s.Order.CustomerId,
-<<<<<<< HEAD
-=======
+
                             Employees = new EmployeesDTO
                             {
                                 EmployeeId = s.Order.Employees.EmployeeId,
@@ -219,25 +217,9 @@ namespace OrderRestaurant.Controllers
                                 Code = s.Order.Tables.Code,
                                 Note = s.Order.Tables.Note,
                                 QR_id = s.Order.Tables.QR_id,
->>>>>>> 6ada6d35fd18ed6979e48898069866d536d12103
 
-                            Employees = s.Order.Employees != null ? new EmployeesDTO
-                                    {
-                                        EmployeeId = s.Order.Employees.EmployeeId,
-                                        EmployeeName = s.Order.Employees.EmployeeName,
-                                        Image = s.Order.Employees.Image,
-                                        Phone = s.Order.Employees.Phone,
-                                        Email = s.Order.Employees.Email,
-                                        Password = s.Order.Employees.Password,
-                                    } : null,
-                            Tables = new TablesDTO
-                                    {
-                                        TableId = s.Order.Tables.TableId,
-                                        TableName = s.Order.Tables.TableName,
-                                        Code = s.Order.Tables.Code,
-                                        Note = s.Order.Tables.Note,
-                                        QR_id = s.Order.Tables.QR_id,
-                                    }
+
+                            }
                         }
                     }).ToList();
                 return Ok(model);
@@ -259,14 +241,14 @@ namespace OrderRestaurant.Controllers
 
             try
             {
-               
+
                 var order = new Order
                 {
                     TableId = cartDto.TableId,
                     CreationTime = DateTime.Now,
                     Code = Constants.ORDER_INIT,
                     Pay = cartDto.TotalAmount,
-                    Note ="",
+                    Note = "",
                 };
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
@@ -310,16 +292,16 @@ namespace OrderRestaurant.Controllers
                 return StatusCode(500, $"Bị lỗi: {ex.Message}");
             }
         }
-       /* // GET: api/orders/search?type=Order
-        [HttpGet("search")]
-        public async Task<ActionResult<List<Order>>> GetOrdersByType(string type = "Order")
-        {
-            var orders = await _orderRepository.GetSearchType(type);
-            return Ok(orders);
-        }*/
+        /* // GET: api/orders/search?type=Order
+         [HttpGet("search")]
+         public async Task<ActionResult<List<Order>>> GetOrdersByType(string type = "Order")
+         {
+             var orders = await _orderRepository.GetSearchType(type);
+             return Ok(orders);
+         }*/
         [HttpDelete]
         [Route("{id}")]
-        public async Task<IActionResult> DeleteOrder (int id)
+        public async Task<IActionResult> DeleteOrder(int id)
         {
             if (!ModelState.IsValid)
             {
@@ -327,8 +309,8 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
-                var model = await _context.Orders.Include(o=>o.OrderDetails).FirstOrDefaultAsync(i => i.OrderId == id);
-                if(model == null)
+                var model = await _context.Orders.Include(o => o.OrderDetails).FirstOrDefaultAsync(i => i.OrderId == id);
+                if (model == null)
                 {
                     return NotFound("Không tìm thấy mã Order");
                 }
@@ -336,7 +318,8 @@ namespace OrderRestaurant.Controllers
                 _context.Orders.Remove(model); // xóa một cái OrderId
                 await _context.SaveChangesAsync();
                 return Ok("Xóa thành công");
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 return StatusCode(500, $"Bị lỗi: {ex.Message}");
             }
@@ -373,7 +356,7 @@ namespace OrderRestaurant.Controllers
                 var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId);
                 if (order != null)
                 {
-                    order.Pay = order.Pay -  deletedAmount; 
+                    order.Pay = order.Pay - deletedAmount;
                 }
                 await _context.SaveChangesAsync();
                 return Ok("Xóa OrderDetails thành công");
@@ -393,24 +376,24 @@ namespace OrderRestaurant.Controllers
 
             try
             {
-                
+
                 var orderDetailToUpdate = await _context.OrderDetails.FirstOrDefaultAsync(od => od.OrderId == orderId && od.FoodId == foodId);
 
-                
+
                 if (orderDetailToUpdate == null)
                 {
                     return NotFound("Không tìm thấy");
                 }
 
                 //Lấy giá tiền của FoodId
-                var foodPrice = await _context.Foods.Where(f=>f.FoodId==foodId).Select(f=>f.UnitPrice).FirstOrDefaultAsync();
+                var foodPrice = await _context.Foods.Where(f => f.FoodId == foodId).Select(f => f.UnitPrice).FirstOrDefaultAsync();
                 // Cập nhật thông tin của OrderDetail
                 orderDetailToUpdate.Quantity = orderDetailDto.Quantity;
 
                 orderDetailToUpdate.Note = orderDetailDto.Note;
 
                 // tính tổng tiền
-                orderDetailToUpdate.TotalAmount = orderDetailDto.Quantity*foodPrice;
+                orderDetailToUpdate.TotalAmount = orderDetailDto.Quantity * foodPrice;
 
                 // Lấy tổng số tiền của các OrderDetail còn lại của Order
                 decimal? totalAmount = _context.OrderDetails
@@ -448,7 +431,7 @@ namespace OrderRestaurant.Controllers
                     return NotFound("Không tìm thấy");
                 }
 
-                if(model.Code != Constants.ORDER_INIT)
+                if (model.Code != Constants.ORDER_INIT)
                 {
                     return BadRequest("Trạng thái không phải là đơn mới");
                 }
@@ -511,7 +494,7 @@ namespace OrderRestaurant.Controllers
                 var table = await _context.Tables.FindAsync(model.TableId);
                 if (table != null)
                 {
-                    
+
                     table.Code = Constants.TABLE_EMPTY;
                     await _context.SaveChangesAsync();
                 }
@@ -577,7 +560,7 @@ namespace OrderRestaurant.Controllers
                 {
                     OrderId = model.OrderId,
                     EmployeeId = model.EmployeeId,
-                    Code= model.Code,
+                    Code = model.Code,
                     ReceivingTime = model.ReceivingTime,
                     PaymentTime = model.PaymentTime,
                     ManageStatuss = _context.Statuss
@@ -602,31 +585,31 @@ namespace OrderRestaurant.Controllers
             }
         }
 
-       /* //Hóa đơn
-        [HttpGet("Invoice")]
+        /* //Hóa đơn
+         [HttpGet("Invoice")]
 
-        public async Task<IActionResult> GetInvoice(int orderId)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            try
-            {
-                var invoice = await _context.OrderDetails.Where(s => s.OrderId == orderId)
-                                                .Include(s => s.FoodId)
-                                                .ToListAsync();
-                if(invoice == null )
-                {
+         public async Task<IActionResult> GetInvoice(int orderId)
+         {
+             if (!ModelState.IsValid)
+             {
+                 return BadRequest(ModelState);
+             }
+             try
+             {
+                 var invoice = await _context.OrderDetails.Where(s => s.OrderId == orderId)
+                                                 .Include(s => s.FoodId)
+                                                 .ToListAsync();
+                 if(invoice == null )
+                 {
 
-                }
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Bị lỗi: {ex.Message}");
-            }
-        }*/
+                 }
+                 return Ok();
+             }
+             catch (Exception ex)
+             {
+                 return StatusCode(500, $"Bị lỗi: {ex.Message}");
+             }
+         }*/
         //Tổng tiền trong ngày
 
         [HttpGet("revenue-by-day/{date}")]
@@ -653,7 +636,7 @@ namespace OrderRestaurant.Controllers
         {
             try
             {
-                if(month>12 || month < 0)
+                if (month > 12 || month < 0)
                 {
                     return BadRequest("Số tháng không hợp lệ");
                 }

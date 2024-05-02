@@ -3,6 +3,6 @@
     public class UpdatedRequirementDTO
     {
         public string Title { get; set; }
-        public string? RequestNode { get; set; }
+        public string? RequestNote { get; set; }
     }
 }

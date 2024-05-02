@@ -6,7 +6,7 @@ namespace OrderRestaurant.DTO.RequirementDTO
     {
         public int TableId { get; set; }
         public string Title { get; set; }
-        public string? RequestNode { get; set; }
+        public string? RequestNote { get; set; }
        // public TablesDTO Tables { get; set; }
     }
 }

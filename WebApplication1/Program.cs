@@ -1,9 +1,13 @@
 ﻿
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.IdentityModel.Tokens;
 using OrderRestaurant.Data;
+using OrderRestaurant.Model;
 using OrderRestaurant.Responsitory;
 using OrderRestaurant.Service;
+using System.Text;
 namespace WebApplication1
 {
     public class Program
@@ -26,11 +30,36 @@ namespace WebApplication1
             builder.Services.AddScoped<ITable, TableResponsitory>();
             builder.Services.AddScoped<IOrder, OrderResponsitory>();
             builder.Services.AddScoped<IConfig, ConfigResponsitory>();
-
+            var configuration = builder.Configuration;
             builder.Services.AddDbContext<ApplicationDBContext>(options =>
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
+            builder.Services.Configure<AppSetting>(configuration.GetSection("AppSettings"));
+
+            builder.Services.AddAuthentication(cfg =>
+            {
+                cfg.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                cfg.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                cfg.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(x =>
+            {
+                x.RequireHttpsMetadata = false;
+                x.SaveToken = false;
+                x.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey
+                        (
+                            Encoding.UTF8.GetBytes(builder.Configuration["AppSettings:SecretKey"])
+                        ),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero
+                };
+            });
+
+
             // Thêm dịch vụ Session
             builder.Services.AddDistributedMemoryCache(); // Sử dụng cache bộ nhớ phân tán (cho mục đích demo)
             builder.Services.AddMemoryCache();
@@ -87,6 +116,10 @@ namespace WebApplication1
 
             // Thêm middleware Session vào pipeline
             app.UseSession();
+
+            app.UseHttpsRedirection();
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
            

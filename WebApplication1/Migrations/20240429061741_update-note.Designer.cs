@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OrderRestaurant.Data;
 
@@ -11,9 +12,11 @@ using OrderRestaurant.Data;
 namespace OrderRestaurant.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240429061741_update-note")]
+    partial class updatenote
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -90,12 +93,7 @@ namespace OrderRestaurant.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
-
                     b.HasKey("EmployeeId");
-
-                    b.HasIndex("RoleId");
 
                     b.ToTable("Employee");
                 });
@@ -262,23 +260,6 @@ namespace OrderRestaurant.Migrations
                     b.ToTable("Requirements");
                 });
 
-            modelBuilder.Entity("OrderRestaurant.Data.Roles", b =>
-                {
-                    b.Property<int>("RoleId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoleId"));
-
-                    b.Property<string>("RoleName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("RoleId");
-
-                    b.ToTable("Roles");
-                });
-
             modelBuilder.Entity("OrderRestaurant.Data.Table", b =>
                 {
                     b.Property<int>("TableId")
@@ -303,17 +284,6 @@ namespace OrderRestaurant.Migrations
                     b.HasKey("TableId");
 
                     b.ToTable("Table");
-                });
-
-            modelBuilder.Entity("OrderRestaurant.Data.Employee", b =>
-                {
-                    b.HasOne("OrderRestaurant.Data.Roles", "Role")
-                        .WithMany("Employees")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("OrderRestaurant.Data.Food", b =>
@@ -401,11 +371,6 @@ namespace OrderRestaurant.Migrations
             modelBuilder.Entity("OrderRestaurant.Data.Order", b =>
                 {
                     b.Navigation("OrderDetails");
-                });
-
-            modelBuilder.Entity("OrderRestaurant.Data.Roles", b =>
-                {
-                    b.Navigation("Employees");
                 });
 
             modelBuilder.Entity("OrderRestaurant.Data.Table", b =>
