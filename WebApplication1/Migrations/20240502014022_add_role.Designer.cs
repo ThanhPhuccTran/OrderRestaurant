@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OrderRestaurant.Data;
 
@@ -11,9 +12,11 @@ using OrderRestaurant.Data;
 namespace OrderRestaurant.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240502014022_add_role")]
+    partial class add_role
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -93,9 +96,12 @@ namespace OrderRestaurant.Migrations
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("RolesRoleId")
+                        .HasColumnType("int");
+
                     b.HasKey("EmployeeId");
 
-                    b.HasIndex("RoleId");
+                    b.HasIndex("RolesRoleId");
 
                     b.ToTable("Employee");
                 });
@@ -307,13 +313,9 @@ namespace OrderRestaurant.Migrations
 
             modelBuilder.Entity("OrderRestaurant.Data.Employee", b =>
                 {
-                    b.HasOne("OrderRestaurant.Data.Roles", "Role")
+                    b.HasOne("OrderRestaurant.Data.Roles", null)
                         .WithMany("Employees")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Role");
+                        .HasForeignKey("RolesRoleId");
                 });
 
             modelBuilder.Entity("OrderRestaurant.Data.Food", b =>

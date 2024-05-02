@@ -36,7 +36,7 @@ namespace OrderRestaurant.Controllers
                         TableId = s.TableId,
                         RequestTime = s.RequestTime,
                         Title = s.Title,
-                        RequestNode = s.RequestNode,
+                        RequestNote = s.RequestNote,
                         Code = s.Code,
                         Tables = _context.Tables.Where(a => a.TableId == s.TableId)
                             .Select(o => new TablesDTO
@@ -68,6 +68,58 @@ namespace OrderRestaurant.Controllers
                 return StatusCode(500, $"Bị lỗi: {ex.Message}");
             }
         }
+        [HttpGet]
+        [Route("{id}")]
+        public async Task<IActionResult> GetRequestById(int id)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var model = await _context.Requests.Select
+                    (
+                        s => new RequirementModel
+                        {
+                            RequestId = s.RequestId,
+                            TableId = s.TableId,
+                            RequestTime = s.RequestTime,
+                            Title = s.Title,
+                            RequestNote = s.RequestNote,
+                            Code = s.Code,
+                            Tables = _context.Tables.Where(a => a.TableId == s.TableId)
+                                                    .Select(o => new TablesDTO
+                                                    {
+                                                        TableId = o.TableId,
+                                                        TableName = o.TableName,
+                                                        Note = o.Note,
+                                                        QR_id = o.QR_id,
+                                                        Code = o.Code
+                                                    }).FirstOrDefault() ?? new TablesDTO(),
+                            Statuss = _context.Statuss
+                                                .Where(a => a.Code == s.Code && a.Type == "Order")
+                                                .Select(o => new ManageStatusDTO
+                                                {
+                                                    StatusId = o.StatusId,
+                                                    Code = o.Code,
+                                                    Type = o.Type,
+                                                    Value = o.Value,
+                                                    Description = o.Description,
+                                                }).FirstOrDefault(),
+
+                         }).Where(a=>a.RequestId == id).FirstOrDefaultAsync();
+            if(model == null)
+            {
+                return NotFound();
+            }
+                return Ok(model);
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, $"Bị lỗi: {ex.Message}");
+            }
+        }
 
         [HttpPost("request")]
         public async Task<IActionResult> TakeRequest ([FromBody]CreatedRequirementDTO requirement)
@@ -87,7 +139,7 @@ namespace OrderRestaurant.Controllers
                 {
                     TableId = requirement.TableId,
                     RequestTime = DateTime.Now,
-                    RequestNode = requirement.RequestNode,
+                    RequestNote = requirement.RequestNote,
                     Title = requirement.Title,
                     Code = Constants.REQUEST_INIT, 
                 };
@@ -99,7 +151,7 @@ namespace OrderRestaurant.Controllers
                 return StatusCode(500, $"Bị lỗi: {ex.Message}");
             }
         }
-        [HttpPut("complete-request/{requestId}")]
+        [HttpPost("complete-request/{requestId}")]
         public async Task<IActionResult> CompleteRequest(int requestId)
         {
             try
@@ -122,7 +174,7 @@ namespace OrderRestaurant.Controllers
                     RequestTime = request.RequestTime,
                     Code = request.Code,
                     Title = request.Title,
-                    RequestNode = request.RequestNode,
+                    RequestNote = request.RequestNote,
                     Tables = _context.Tables.Where(a => a.TableId == request.TableId)
                             .Select(o => new TablesDTO
                             {
@@ -145,7 +197,7 @@ namespace OrderRestaurant.Controllers
             }
         }
 
-        [HttpPut("refuse-request/{requestId}")]
+        [HttpPost("refuse-request/{requestId}")]
         public async Task<IActionResult> RefuseRequest(int requestId)
         {
             try
@@ -168,7 +220,7 @@ namespace OrderRestaurant.Controllers
                     RequestTime = request.RequestTime,
                     Code = request.Code,
                     Title = request.Title,
-                    RequestNode = request.RequestNode,
+                    RequestNote = request.RequestNote,
                     Tables = _context.Tables.Where(a => a.TableId == request.TableId)
                             .Select(o => new TablesDTO
                             {
@@ -240,7 +292,7 @@ namespace OrderRestaurant.Controllers
 
                 // Cập nhật thông tin yêu cầu
                 request.Title = updatedRequirement.Title;
-                request.RequestNode = updatedRequirement.RequestNode;
+                request.RequestNote = updatedRequirement.RequestNote;
 
                 // Lưu các thay đổi vào cơ sở dữ liệu
                 await _context.SaveChangesAsync();
@@ -275,7 +327,7 @@ namespace OrderRestaurant.Controllers
                         TableId = s.TableId,
                         RequestTime = s.RequestTime,
                         Title = s.Title,
-                        RequestNode = s.RequestNode,
+                        RequestNote = s.RequestNote,
                         Code = s.Code,
                         Tables = _context.Tables.Where(a => a.TableId == s.TableId)
                             .Select(o => new TablesDTO
