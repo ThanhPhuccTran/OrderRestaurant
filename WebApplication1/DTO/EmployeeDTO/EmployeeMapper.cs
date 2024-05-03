@@ -15,7 +15,8 @@ namespace OrderRestaurant.DTO.EmployeeDTO
                 Image = model.Image,
                 Phone= model.Phone,
                 Email = model.Email,
-                Password = model.Password
+                Password = model.Password,
+                RoleName = model.RoleName,
             };
         }
     }

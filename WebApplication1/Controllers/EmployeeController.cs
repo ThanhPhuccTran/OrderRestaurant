@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.EmployeeDTO;
 using OrderRestaurant.Helpers;
+using OrderRestaurant.Model;
 using OrderRestaurant.Service;
 
 namespace OrderRestaurant.Controllers
@@ -43,7 +45,7 @@ namespace OrderRestaurant.Controllers
         [HttpPost("postEmployee")]
         public async Task<IActionResult> CreateEmployeeImage([FromBody] CreateEmployeeDTO p)
         {
-            var employee = new Employee { EmployeeName = p.EmployeeName, Phone = p.Phone, Email = p.Email, Password = p.Password , Image = p.Image };
+            var employee = new Employee { EmployeeName = p.EmployeeName, Phone = p.Phone, Email = p.Email, Password = p.Password , Image = p.Image, RoleName = Constants.ROLE_EMPLOYEE  };
 
            /* if (p.Image.Length > 0)
             {
@@ -72,9 +74,17 @@ namespace OrderRestaurant.Controllers
                 return BadRequest(ModelState);
 
             }
-            var model = await _employee.GetEmployees();
-            var list = model.Select(hh => hh.ToEmployeeDto());
-            return Ok(list );
+            var model = _context.Employees.Select(s => new EmployeeModel
+            {
+                EmployeeId = s.EmployeeId,
+                EmployeeName = s.EmployeeName,
+                Email = s.Email,
+                Image = s.Image,
+                Password = s.Password,
+                Phone  = s.Phone,
+                RoleName = s.RoleName,
+            }).ToList();
+            return Ok(model);
         }
         [HttpGet("{id}")]
         public async Task<ActionResult<Employee>> GetEmployee(int id)
@@ -97,6 +107,19 @@ namespace OrderRestaurant.Controllers
                 return BadRequest("Sửa thất bại");    
             }
             return Ok(model.ToEmployeeDto());
+        }
+
+     
+        [HttpPut("UpdateEmployeeAdmin")]
+        
+        public async Task<IActionResult> UpdateEmployeeAdmin(int employeeId,string rolename = Constants.ROLE_ADMIN)
+        {
+            var model = await _employee.UpdateAdmin(employeeId, rolename);
+            if (model == null)
+            {
+                return BadRequest("Cập nhật thất bại");
+            }
+            return Ok("cập nhật thành công");
         }
 
         [HttpDelete]

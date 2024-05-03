@@ -1,4 +1,6 @@
-﻿namespace OrderRestaurant.Model
+﻿using OrderRestaurant.Data;
+
+namespace OrderRestaurant.Model
 {
     public class EmployeeModel
     {
@@ -8,5 +10,6 @@
         public string? Image { get; set; }
         public string Email { get; set; }
         public string Password { get; set; }
+        public string RoleName { get; set; }
     }
 }
