@@ -2,6 +2,7 @@
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.EmployeeDTO;
 using OrderRestaurant.Helpers;
+using OrderRestaurant.Model;
 using OrderRestaurant.Service;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
@@ -64,14 +65,29 @@ namespace OrderRestaurant.Responsitory
                 Image = f.Image,
                 Phone = f.Phone,
                 Email = f.Email,
-                Password = f.Password
-
+                Password = f.Password,
+                RoleName = f.RoleName,
 
             })
                 .Skip(skipNumber)
                 .Take(querry.PageSize)
                 .ToListAsync();
             return (totalItems, totalPages, employees);
+        }
+
+        public async Task<Employee> UpdateAdmin(int id, string rolename )
+        {
+            var updateEmployee = await _dbContext.Employees.FirstOrDefaultAsync(hh => hh.EmployeeId == id);
+            if (updateEmployee == null || updateEmployee.RoleName == Constants.ROLE_ADMIN)
+            {
+                return null;
+            }
+            if (updateEmployee.RoleName != Constants.ROLE_ADMIN)
+            {
+                updateEmployee.RoleName = rolename;
+                await _dbContext.SaveChangesAsync();
+            }
+            return updateEmployee;
         }
 
         public async Task<Employee> UpdateEmployee(int id, CreateEmployeeDTO updateEmployeeDTO)
