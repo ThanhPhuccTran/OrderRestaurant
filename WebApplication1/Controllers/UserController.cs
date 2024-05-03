@@ -22,7 +22,6 @@ namespace OrderRestaurant.Controllers
         {
             _context = context;
             _appSettings = optionsMonitor.CurrentValue;
-
         }
         [HttpPost("/Login")]
         public async Task<IActionResult> Validate(LoginModel login)
@@ -38,7 +37,6 @@ namespace OrderRestaurant.Controllers
                     Message = "Unauthorized: UserName/Password không hợp lệ",
                 });
             }
-           
             //cấp token 
             var token = await GenerateToken(user);
             return Ok(new ApiResponse

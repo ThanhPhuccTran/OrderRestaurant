@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrderRestaurant.Data;
@@ -127,7 +127,8 @@ namespace OrderRestaurant.Controllers
                                 Phone = o.Password,
                                 Image = o.Image
 
-                            }).FirstOrDefault(),
+                            })
+                            .FirstOrDefault(),
                     Statuss = _context.Statuss
                             .Where(a => a.Code == s.Code && a.Type == "Order")
                             .Select(o => new ManageStatusDTO
