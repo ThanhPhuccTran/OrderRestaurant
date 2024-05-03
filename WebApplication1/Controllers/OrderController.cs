@@ -424,13 +424,10 @@ namespace OrderRestaurant.Controllers
             {
 
                 var orderDetailToUpdate = await _context.OrderDetails.FirstOrDefaultAsync(od => od.OrderId == orderId && od.FoodId == foodId);
-
-
                 if (orderDetailToUpdate == null)
                 {
                     return NotFound("Không tìm thấy");
                 }
-
                 //Lấy giá tiền của FoodId
                 var foodPrice = await _context.Foods.Where(f => f.FoodId == foodId).Select(f => f.UnitPrice).FirstOrDefaultAsync();
                 // Cập nhật thông tin của OrderDetail
