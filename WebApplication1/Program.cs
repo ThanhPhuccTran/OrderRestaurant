@@ -80,6 +80,8 @@ namespace WebApplication1
                     builder
                         .WithOrigins("https://localhost:7014", "http://localhost:5063")
                         .AllowAnyHeader()
+                        .SetIsOriginAllowed(origin => true)
+                        .AllowCredentials()
                         .AllowAnyMethod();
                 });
             });

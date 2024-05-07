@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.Cart;
 using OrderRestaurant.DTO.CartDTO;
 using OrderRestaurant.DTO.ConfigDTO;
 using OrderRestaurant.DTO.EmployeeDTO;
 using OrderRestaurant.DTO.FoodDTO;
+using OrderRestaurant.DTO.InvoiceDTO;
 using OrderRestaurant.DTO.OrderDetailsDTO;
 using OrderRestaurant.DTO.OrderDTO;
 using OrderRestaurant.DTO.TableDTO;
@@ -255,81 +257,51 @@ namespace OrderRestaurant.Controllers
 
             try
             {
-                // Kiểm tra xem có Order chưa thanh toán nào cho bàn đó không
-                var existingOrder = await _context.Orders.FirstOrDefaultAsync(o => o.TableId == cartDto.TableId && o.Code == Constants.ORDER_INIT);
 
-                if (existingOrder != null)
+                var order = new Order
                 {
-                    // Nếu đã có Order chưa thanh toán, thêm các món mới vào Order đó
-                    foreach (var item in cartDto.Items)
-                    {
-                        var existingOrderDetail = await _context.OrderDetails.FirstOrDefaultAsync(od => od.OrderId == existingOrder.OrderId && od.FoodId == item.Foods.FoodId);
-                        var food = await _context.Foods.FindAsync(item.Foods.FoodId);
-
-                        if (existingOrderDetail != null)
-                        {
-                            // Nếu món đã tồn tại trong Order, cập nhật số lượng
-                            existingOrderDetail.Quantity += item.Quantity;
-                            existingOrderDetail.TotalAmount += item.Quantity * food.UnitPrice;
-                        }
-                        else
-                        {
-                            // Nếu món chưa tồn tại trong Order, tạo một bản ghi mới
-                            var orderDetails = new OrderDetails
-                            {
-                                OrderId = existingOrder.OrderId,
-                                Quantity = item.Quantity,
-                                UnitPrice = food.UnitPrice,
-                                Note = "",
-                                TotalAmount = item.Quantity * food.UnitPrice,
-                                FoodId = item.Foods.FoodId
-                            };
-                            _context.OrderDetails.Add(orderDetails);
-                        }
-                    }
-                    // Cập nhật tổng số tiền của Order
-                    existingOrder.Pay += cartDto.TotalAmount;
-                    await _context.SaveChangesAsync();
-
-                    return Ok("Thêm vào giỏ hàng thành công");
+                    TableId = cartDto.TableId,
+                    CreationTime = DateTime.Now,
+                    Code = Constants.ORDER_INIT,
+                    Pay = cartDto.TotalAmount,
+                    Note = "",
+                };
+                _context.Orders.Add(order);
+                await _context.SaveChangesAsync();
+                //check bàn có người hay chưa
+                var table = await _context.Tables.FindAsync(cartDto.TableId);
+                if (table == null)
+                {
+                    return NotFound("Không tìm thấy bàn");
                 }
                 else
                 {
-                    // Nếu chưa có Order chưa thanh toán, tạo một Order mới
-                    var order = new Order
-                    {
-                        TableId = cartDto.TableId,
-                        CreationTime = DateTime.Now,
-                        Code = Constants.ORDER_INIT,
-                        Pay = cartDto.TotalAmount,
-                        Note = "",
-                    };
-                    _context.Orders.Add(order);
+                    //check bàn chuyển qua trạng thái có người 
+                    table.Code = Constants.TABLE_GUESTS;
                     await _context.SaveChangesAsync();
-
-                    // Thêm các món vào Order mới
-                    foreach (var item in cartDto.Items)
-                    {
-                        var food = await _context.Foods.FindAsync(item.Foods.FoodId);
-                        if (food == null)
-                        {
-                            return NotFound("Không tìm thấy ");
-                        }
-                        var orderDetails = new OrderDetails
-                        {
-                            OrderId = order.OrderId,
-                            Quantity = item.Quantity,
-                            UnitPrice = food.UnitPrice,
-                            Note = "",
-                            TotalAmount = item.Quantity * food.UnitPrice,
-                            FoodId = item.Foods.FoodId
-                        };
-                        _context.OrderDetails.Add(orderDetails);
-                    }
-                    await _context.SaveChangesAsync();
-
-                    return Ok("Tạo đơn hàng mới thành công");
                 }
+                foreach (var item in cartDto.Items)
+                {
+                    var food = await _context.Foods.FindAsync(item.Foods.FoodId);
+                    Console.WriteLine(food);
+                    if (food == null)
+                    {
+                        return NotFound("Không tìm thấy ");
+                    }
+                    var orderDetails = new OrderDetails
+                    {
+                        OrderId = order.OrderId,
+                        Quantity = item.Quantity,
+                        UnitPrice = food.UnitPrice,
+                        Note = "",
+                        TotalAmount = item.Quantity * food.UnitPrice,
+                        FoodId = item.Foods.FoodId
+                    };
+                    _context.OrderDetails.Add(orderDetails);
+                }
+                await _context.SaveChangesAsync();
+
+                return Ok("THÊM VÀO GIỎ ĐƠN HÀNG THÀNH CÔNG");
             }
             catch (Exception ex)
             {
@@ -468,7 +440,7 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
-                var model = await _orderRepository.FindOrder(OrderId);
+                var model = await _orderRepository.FindOrderById(OrderId);
                 if (model == null)
                 {
                     return NotFound("Không tìm thấy");
@@ -510,8 +482,8 @@ namespace OrderRestaurant.Controllers
                 return StatusCode(500, $"Bị lỗi: {ex.Message}");
             }
         }
-        [HttpPost("PaymentOrder/{OrderId}/{EmployeeId}")]
-        public async Task<IActionResult> PaymentOrder(int OrderId, int EmployeeId)
+        [HttpPost("PaymentOrder/{TableId}/{EmployeeId}")]
+        public async Task<IActionResult> PaymentOrder(int TableId, int EmployeeId)
         {
             if (!ModelState.IsValid)
             {
@@ -519,51 +491,168 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
-                var model = await _orderRepository.FindOrder(OrderId);
-                if (model == null)
+                var models = await _orderRepository.FindOrdersByTable(TableId, Constants.ORDER_APPROVE);
+                if (models == null || models.Count == 0)
                 {
                     return NotFound("Không tìm thấy");
                 }
 
-                if (model.Code != Constants.ORDER_APPROVE)
+                foreach (var model in models)
                 {
-                    return BadRequest("Trạng thái không phải là đơn đã duyệt");
-                }
-                model.Code = Constants.ORDER_PAYMENT;
-                model.EmployeeId = EmployeeId;
-                model.PaymentTime = DateTime.Now;
+                    if (model.TableId == TableId && model.Code == Constants.ORDER_APPROVE)
+                    {
+                        model.Code = Constants.ORDER_PAYMENT;
+                        model.EmployeeId = EmployeeId;
+                        model.PaymentTime = DateTime.Now;
 
-                //Thanh toán xong trở về bàn trống
-                var table = await _context.Tables.FindAsync(model.TableId);
-                if (table != null)
-                {
-
-                    table.Code = Constants.TABLE_EMPTY;
-                    await _context.SaveChangesAsync();
-                }
-
-                var orderDTO = new OrderDTO
-                {
-                    OrderId = model.OrderId,
-                    EmployeeId = model.EmployeeId,
-                    Code = model.Code,
-                    ReceivingTime = model.ReceivingTime,
-                    PaymentTime = model.PaymentTime,
-                    ManageStatuss = _context.Statuss
-                        .Where(a => a.Code == model.Code)
-                        .Select(s => new ManageStatusDTO
+                        //Thanh toán xong trở về bàn trống
+                        var table = await _context.Tables.FindAsync(model.TableId);
+                        if (table != null)
                         {
-                            StatusId = s.StatusId,
-                            Code = s.Code,
-                            Type = s.Type,
-                            Value = s.Value,
-                            Description = s.Description
-                        })
-                        .FirstOrDefault() ?? new ManageStatusDTO(),
-                };
+                            table.Code = Constants.TABLE_EMPTY;
+                        }
+                    }
+                }
 
-                await _orderRepository.UpdateAsync(model);
-                return Ok(orderDTO);
+                await _context.SaveChangesAsync();
+
+                // Tạo danh sách các DTO
+                var orderDTOs = new List<OrderDTO>();
+                foreach (var model in models)
+                {
+                    var orderDTO = new OrderDTO
+                    {
+                        OrderId = model.OrderId,
+                        EmployeeId = model.EmployeeId,
+                        Code = model.Code,
+                        TableId = model.TableId,
+                        ReceivingTime = model.ReceivingTime,
+                        PaymentTime = model.PaymentTime,
+                        ManageStatuss = _context.Statuss
+                                 .Where(a => a.Code == model.Code)
+                                 .Select(s => new ManageStatusDTO
+                                 {
+                                     StatusId = s.StatusId,
+                                     Code = s.Code,
+                                     Type = s.Type,
+                                     Value = s.Value,
+                                     Description = s.Description
+                                 })
+                                 .FirstOrDefault() ?? new ManageStatusDTO(),
+                    };
+                    orderDTOs.Add(orderDTO);
+                }
+
+                return Ok(orderDTOs);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Bị lỗi: {ex.Message}");
+            }
+        }
+        [HttpGet("get_bill")]
+        public async Task<IActionResult> GetBill(int tableId)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var model = await _orderRepository.FindOrdersByTable(tableId, Constants.ORDER_APPROVE);
+
+                if (model == null || model.Count == 0)
+                {
+                    return NotFound("Không tìm thấy hóa đơn cho bàn này.");
+                }
+
+                
+                // Tong tien Order
+                decimal ToTalOrder = (decimal) model.Sum(o => o.Pay);
+                var orderDetails = model.Select(o => new GetInvoiceDTO
+                {
+                    OrderId = o.OrderId,
+                    EmployeeId = o.EmployeeId,
+                    TableId = o.TableId,
+                    CreationTime = o.CreationTime,
+                    ReceivingTime = o.ReceivingTime,
+                    PaymentTime = o.PaymentTime,
+                    Pay = o.Pay,
+                    Employees = _context.Employees
+                                        .Where(a => a.EmployeeId == o.EmployeeId)
+                                        .Select(s => new EmployeesDTO
+                                        {
+                                            EmployeeId = s.EmployeeId,
+                                            EmployeeName = s.EmployeeName,
+                                            Email = s.Email,
+                                            Password = s.Password,
+                                            Phone = s.Password,
+                                            Image = s.Image
+
+                                        }).FirstOrDefault(),
+                    Tables = _context.Tables.Where(a => a.TableId == o.TableId)
+                                    .Select(s => new TablesDTO
+                                    {
+                                        TableId = s.TableId,
+                                        TableName = s.TableName,
+                                        Note = s.Note,
+                                        QR_id = s.QR_id,
+                                        Code = s.Code
+                                    }).FirstOrDefault(),
+                   }).ToList();
+                // Lặp qua mỗi đơn hàng để lấy danh sách món ăn và tính tổng số lượng mỗi món ăn
+                foreach (var order in orderDetails)
+                {
+                    order.Foods = _context.OrderDetails
+                                        .Where(od => od.OrderId == order.OrderId)
+                                        .Select(od => new FoodInvoiceDTO
+                                        {
+                                            FoodId = od.FoodId,
+                                            NameFood = od.Food.NameFood,
+                                            UrlImage = od.Food.UrlImage,
+                                            UnitPrice = od.Food.UnitPrice,
+                                            Quantity = od.Quantity,
+                                            TotalPrice = od.Quantity * od.Food.UnitPrice
+                                        })
+                                        .GroupBy(food => food.FoodId)
+                                        .Select(group => new FoodInvoiceDTO
+                                        {
+                                            FoodId = group.Key,
+                                            NameFood = group.First().NameFood,
+                                            UrlImage = group.First().UrlImage,
+                                            UnitPrice = group.First().UnitPrice,
+                                            Quantity = group.Sum(food => food.Quantity),
+                                            TotalPrice = group.Sum(food => food.Quantity * food.UnitPrice)
+                                        })
+                                        .ToList();
+                }
+
+                // Tạo danh sách allFoods
+                var allFoods = orderDetails.SelectMany(order => order.Foods).ToList();
+                // Nhóm các món ăn theo foodId và tính tổng số lượng
+                var groupedFoods = allFoods.GroupBy(food => food.FoodId)
+                                            .Select(group => new FoodInvoiceDTO
+                                            {
+                                                FoodId = group.Key,
+                                                NameFood = group.First().NameFood,
+                                                UrlImage = group.First().UrlImage,
+                                                UnitPrice = group.First().UnitPrice,
+                                                Quantity = group.Sum(food => food.Quantity),
+                                                TotalPrice = group.Sum(food => food.Quantity * food.UnitPrice)
+
+                                            })
+                                            .ToList();
+
+              
+                var orderData = new
+                {
+                    TableId = tableId,
+                    TotalAmount = ToTalOrder,
+                    AllFoods = groupedFoods,
+                    Orders = orderDetails,
+                    
+                };
+                return Ok(orderData);
             }
             catch (Exception ex)
             {
@@ -579,7 +668,7 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
-                var model = await _orderRepository.FindOrder(OrderId);
+                var model = await _orderRepository.FindOrderById(OrderId);
                 if (model == null)
                 {
                     return NotFound("Không tìm thấy");
@@ -628,33 +717,7 @@ namespace OrderRestaurant.Controllers
             }
         }
 
-        /* //Hóa đơn
-         [HttpGet(" ")]
-
-         public async Task<IActionResult> GetInvoice(int orderId)
-         {
-             if (!ModelState.IsValid)
-             {
-                 return BadRequest(ModelState);
-             }
-             try
-             {
-                 var invoice = await _context.OrderDetails.Where(s => s.OrderId == orderId)
-                                                 .Include(s => s.FoodId)
-                                                 .ToListAsync();
-                 if(invoice == null )
-                 {
-
-                 }
-                 return Ok();
-             }
-             catch (Exception ex)
-             {
-                 return StatusCode(500, $"Bị lỗi: {ex.Message}");
-             }
-         }*/
-        //Tổng tiền trong ngày
-
+        
         [HttpGet("revenue-by-day/{date}")]
         public IActionResult GetRevenueByDay(int date)
         {

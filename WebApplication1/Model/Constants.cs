@@ -43,6 +43,7 @@
         /// </summary>
         public const int REQUEST_REFUSE = 3;
 
+        //ROLE
         public const string ROLE_EMPLOYEE = "employee";
         public const string ROLE_ADMIN = "admin";
 

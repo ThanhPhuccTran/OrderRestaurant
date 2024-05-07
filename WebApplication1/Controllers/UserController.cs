@@ -51,7 +51,7 @@ namespace OrderRestaurant.Controllers
         {
             var jwtTokenHandler = new JwtSecurityTokenHandler();
             var sercetKeyBytes = Encoding.UTF8.GetBytes(_appSettings.SecretKey);
-            // Check if Employee's Role is null
+           
            
             var tokenDescription = new SecurityTokenDescriptor
             {

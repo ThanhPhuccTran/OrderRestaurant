@@ -10,6 +10,7 @@ namespace OrderRestaurant.Service
 
         Task<List<Order>> GetSearchType(string type ="Order");
 
-        Task<Order> FindOrder(int orderId);
+        Task<List<Order>> FindOrdersByTable(int tableId, int code);
+        Task<Order> FindOrderById(int orderid);
     }
 }
