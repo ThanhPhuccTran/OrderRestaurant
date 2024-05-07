@@ -14,10 +14,20 @@ namespace OrderRestaurant.Responsitory
             _dbContext = dbContext;
         }
 
-        public async Task<Order> FindOrder(int orderId)
+        public async Task<Order> FindOrderById(int orderid)
         {
-            return await _dbContext.Orders.FindAsync(orderId);
+            return await _dbContext.Orders.FindAsync(orderid);
         }
+
+        public async Task<List<Order>> FindOrdersByTable(int tableId, int code)
+        {
+           /* DateTime today = DateTime.Today;
+            DateTime tomorrow = today.AddDays(1);*/
+            return await _dbContext.Orders
+                .Where(o => o.TableId == tableId && o.Code == code /*&& o.CreationTime >= today && o.CreationTime < tomorrow*/)
+                .ToListAsync();
+        }
+
 
         public async Task<List<Order>> GetAll()
         {
