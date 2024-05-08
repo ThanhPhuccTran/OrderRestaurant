@@ -9,9 +9,8 @@ namespace OrderRestaurant.DTO.OrderDTO
         public int TableId { get; set; }
         public int Code { get; set; }
         public int? EmployeeId { get; set; }
-
-        public DateTime? ReceivingTime { get; set; }
         public DateTime? PaymentTime { get; set; }
+        public DateTime? ReceivingTime { get; set; }
         public ManageStatusDTO ManageStatuss { get; set; }
     }
 }

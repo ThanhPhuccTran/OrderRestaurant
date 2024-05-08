@@ -268,18 +268,7 @@ namespace OrderRestaurant.Controllers
                 };
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
-                //check bàn có người hay chưa
-                var table = await _context.Tables.FindAsync(cartDto.TableId);
-                if (table == null)
-                {
-                    return NotFound("Không tìm thấy bàn");
-                }
-                else
-                {
-                    //check bàn chuyển qua trạng thái có người 
-                    table.Code = Constants.TABLE_GUESTS;
-                    await _context.SaveChangesAsync();
-                }
+                
                 foreach (var item in cartDto.Items)
                 {
                     var food = await _context.Foods.FindAsync(item.Foods.FoodId);
@@ -454,11 +443,18 @@ namespace OrderRestaurant.Controllers
                 model.EmployeeId = EmployeeId;
                 model.ReceivingTime = DateTime.Now;
 
+                var table = await _context.Tables.FindAsync(model.TableId);
+                if (table != null)
+                {
 
+                    table.Code = Constants.TABLE_GUESTS;
+                    await _context.SaveChangesAsync();
+                }
                 var orderDTO = new OrderDTO
                 {
                     OrderId = model.OrderId,
                     EmployeeId = model.EmployeeId,
+                    TableId = model.TableId,
                     Code = model.Code,
                     ReceivingTime = model.ReceivingTime,
                     ManageStatuss = _context.Statuss
@@ -718,45 +714,7 @@ namespace OrderRestaurant.Controllers
         }
 
         
-        [HttpGet("revenue-by-day/{date}")]
-        public IActionResult GetRevenueByDay(int date)
-        {
-            try
-            {
-                var dailyRevenue = _context.Orders
-                    .Where(o => o.Code == Constants.ORDER_PAYMENT &&
-                           o.PaymentTime != null &&
-                           o.PaymentTime.Value.Day == date)
-                    .Sum(o => o.Pay);
-
-                return Ok(dailyRevenue);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error: {ex.Message}");
-            }
-        }
-        //Tính tổng tiền theo tháng năm
-        [HttpGet("revenue-by-month/{year}/{month}")]
-        public IActionResult GetRevenueByMonth(int year, int month)
-        {
-            try
-            {
-                if (month > 12 || month < 0)
-                {
-                    return BadRequest("Số tháng không hợp lệ");
-                }
-                var monthlyRevenue = _context.Orders
-                    .Where(o => o.Code == Constants.ORDER_PAYMENT && o.PaymentTime.Value.Year == year && o.PaymentTime.Value.Month == month)
-                    .Sum(o => o.Pay);
-
-                return Ok(monthlyRevenue);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error: {ex.Message}");
-            }
-        }
+        
 
     }
 }

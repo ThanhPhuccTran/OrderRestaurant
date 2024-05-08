@@ -2,6 +2,7 @@
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.TableDTO;
 using OrderRestaurant.Helpers;
+using OrderRestaurant.Model;
 using OrderRestaurant.Service;
 
 namespace OrderRestaurant.Responsitory
@@ -86,7 +87,7 @@ namespace OrderRestaurant.Responsitory
             string note = string.IsNullOrWhiteSpace(tableDTO.Note) ? "" : tableDTO.Note;
             tableUpdate.TableName = tableDTO.TableName;
             tableUpdate.Note = note;
-            tableUpdate.Code = tableDTO.StatusId;
+            tableUpdate.Code = Constants.TABLE_EMPTY;
             tableUpdate.QR_id = tableDTO.QR_id;
            /* if (tableDTO.QR_id.Length > 0)
             {
