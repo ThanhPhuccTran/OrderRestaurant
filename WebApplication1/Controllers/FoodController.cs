@@ -147,19 +147,7 @@ namespace OrderRestaurant.Controllers
 
             return CreatedAtAction(nameof(GetFoodById), new { id = createdFood.FoodId }, createdFood);
         }
-        //https://localhost:7014/api/Food/1
-        /*[HttpGet("{id}")]
-        public async Task<ActionResult<FoodModel>> GetFood(int id)
-        {
-            var food = await _foodRepository.GetFoodByIdAsync(id);
-
-            if (food == null)
-            {
-                return NotFound();
-            }
-
-            return food;
-        }*/
+    
 
         [HttpPut]
         [Route("{id}")]
@@ -173,33 +161,7 @@ namespace OrderRestaurant.Controllers
 
             return Ok(model.ToFoodDto());
         }
-       /* [HttpPatch("{id}")]
-        public async Task<IActionResult> PatchFood([FromRoute] int id, [FromBody] JsonPatchDocument<Food> patchDocument)
-        {
-            if (patchDocument == null)
-            {
-                return BadRequest("The patchDocument field is required.");
-            }
-
-            var check = _context.Foods.FirstOrDefault(ss => ss.FoodId == id);
-            if (check == null)
-            {
-                return NotFound();
-            }
-
-            patchDocument.ApplyTo(check, (Microsoft.AspNetCore.JsonPatch.Adapters.IObjectAdapter)ModelState);
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            // Lưu thay đổi vào cơ sở dữ liệu
-            _context.SaveChanges();
-
-            return Ok(check);
-        }*/
-
+     
 
 
         [HttpDelete]

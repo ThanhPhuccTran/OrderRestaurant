@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Linq;
 using OrderRestaurant.Data;
 using OrderRestaurant.Model;
 using System.IdentityModel.Tokens.Jwt;
@@ -26,29 +27,41 @@ namespace OrderRestaurant.Controllers
         [HttpPost("/Login")]
         public async Task<IActionResult> Validate(LoginModel login)
         {
-            var user = _context.Employees
-                                    .SingleOrDefault(p => p.Email == login.Email && p.Password == login.Password);
-
-            if (user == null)
+            try
             {
-                return Unauthorized(new ApiResponse
+                var user = _context.Employees
+                                        .SingleOrDefault(p => p.Email == login.Email && p.Password == login.Password);
+
+                if (user == null)
                 {
-                    Success = false,
-                    Message = "Unauthorized: UserName/Password không hợp lệ",
+                    return Unauthorized(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "Unauthorized: UserName/Password không hợp lệ",
+                    });
+                }
+                //cấp token 
+                var token = await GenerateToken(user);
+                return Ok(new ApiResponse
+                {
+                    Success = true,
+                    Message = "Authenticate success",
+                    Data = token,
+                });
+            }catch(Exception ex)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = true,
+                    Message = "Authenticate failed",
+                    Data = null,
                 });
             }
-            //cấp token 
-            var token = await GenerateToken(user);
-            return Ok(new ApiResponse
-            {
-                Success = true,
-                Message = "Authenticate success",
-                Data = token,
-            });
         }
 
         private async Task<TokenModel> GenerateToken(Employee nhanVien)
         {
+
             var jwtTokenHandler = new JwtSecurityTokenHandler();
             var sercetKeyBytes = Encoding.UTF8.GetBytes(_appSettings.SecretKey);
            
@@ -66,7 +79,7 @@ namespace OrderRestaurant.Controllers
                    
                 }),
                 //Time hết hạn 
-                Expires = DateTime.UtcNow.AddSeconds(20),
+                Expires = DateTime.UtcNow.AddSeconds(10),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(sercetKeyBytes), SecurityAlgorithms.HmacSha512Signature)
 
             };
@@ -83,7 +96,7 @@ namespace OrderRestaurant.Controllers
                 IsUsed = false,
                 IsRevoked = false,
                 IssueAt = DateTime.UtcNow,
-                ExpiredAt = DateTime.UtcNow.AddHours(1),
+                ExpiredAt = DateTime.UtcNow.AddSeconds(15),
                 EmployeeId = nhanVien.EmployeeId,
 
             };
@@ -121,65 +134,66 @@ namespace OrderRestaurant.Controllers
                 ValidateIssuer = false,
                 ValidateAudience = false,
                 ClockSkew = TimeSpan.Zero,
-
-                ValidateLifetime = false,// ko kiểm tra về hết hạn
+                ValidateLifetime = false, // không kiểm tra về thời gian hết hạn
             };
             try
             {
-                // check 1: AccessToken valid format
-                var tokenInVerification = jwtTokenHandler.ValidateToken(model.AccessToken, tokenValidateParam, 
-                                                                                         out var validatedToken);
-                //check alg
-                if(validatedToken is JwtSecurityToken jwtSecurityToken)
+                // Kiểm tra 1: AccessToken có định dạng hợp lệ không
+                var tokenInVerification = jwtTokenHandler.ValidateToken(model.AccessToken, tokenValidateParam, out var validatedToken);
+
+                // Kiểm tra alg
+                if (validatedToken is JwtSecurityToken jwtSecurityToken)
                 {
                     var result = jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha512, StringComparison.InvariantCultureIgnoreCase);
-                    if (!result) // false
+                    if (!result)
                     {
                         return Ok(new ApiResponse
                         {
                             Success = false,
-                            Message = "Invalid token",
-
+                            Message = "Token không hợp lệ",
                         });
-
                     }
                 }
 
-                //check 3 : Check accessToken expire?
-                var utcExpriceDate = long.Parse(tokenInVerification.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
-                var expriceDate = ConvertUnixTimeToDateTime(utcExpriceDate);
-
-                if(expriceDate > DateTime.UtcNow)
+                // Kiểm tra 2: Xác định thời gian hết hạn từ AccessToken
+                var utcExpireDate = long.Parse(tokenInVerification.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
+                var expireDate = ConvertUnixTimeToDateTime(utcExpireDate);
+                if (expireDate > DateTime.UtcNow)
                 {
                     return Ok(new ApiResponse
                     {
                         Success = false,
-                        Message = "Access token has not yet expired",
-
+                        Message = "Access token vẫn còn hiệu lực",
                     });
                 }
 
-                // check 4 : Check refreshtoken exit in DB
-                var storedToken = _context.RefreshTokens.FirstOrDefault(x => x.Token == model.RefreshToken);
-                if(storedToken == null)
+
+                // Kiểm tra 3: Kiểm tra RefreshToken có tồn tại trong cơ sở dữ liệu không
+                var storedToken = await _context.RefreshTokens.FirstOrDefaultAsync(x => x.Token == model.RefreshToken);
+                if (storedToken == null)
                 {
                     return Ok(new ApiResponse
                     {
                         Success = false,
-                        Message = "Refresh token does not exits",
-
+                        Message = "Refresh token không tồn tại",
                     });
                 }
-
-
-                //check 5 : check refreshToken is used/revoked?
+                // Kiểm tra thời gian hết hạn của RefreshToken
+                if (storedToken.ExpiredAt < DateTime.UtcNow)
+                {
+                    return Ok(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "Refresh token đã hết hạn",
+                    });
+                }
+                // Kiểm tra 4: Kiểm tra RefreshToken đã được sử dụng hoặc bị thu hồi chưa
                 if (storedToken.IsUsed)
                 {
                     return Ok(new ApiResponse
                     {
                         Success = false,
-                        Message = "Refresh token has been used",
-
+                        Message = "Refresh token đã được sử dụng",
                     });
                 }
 
@@ -188,49 +202,48 @@ namespace OrderRestaurant.Controllers
                     return Ok(new ApiResponse
                     {
                         Success = false,
-                        Message = "Refresh token has been revoked",
-
+                        Message = "Refresh token đã bị thu hồi",
                     });
                 }
-                //check 6 AccessToken id == JwtId in RefreshToken
-                var jti = tokenInVerification.Claims.FirstOrDefault(x=>x.Type == JwtRegisteredClaimNames.Jti).Value;
-                if(storedToken.JwtId != jti)
+
+                // Kiểm tra 5: So sánh AccessToken Id với JwtId trong RefreshToken
+                var jti = tokenInVerification.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
+                if (storedToken.JwtId != jti)
                 {
                     return Ok(new ApiResponse
                     {
                         Success = false,
-                        Message = "Token doesn't match",
-
+                        Message = "Token không khớp",
                     });
                 }
 
-                //Update token is used
+                // Cập nhật trạng thái của RefreshToken
                 storedToken.IsRevoked = true;
                 storedToken.IsUsed = true;
                 _context.Update(storedToken);
                 await _context.SaveChangesAsync();
 
-                //create new token
-                var user = await _context.Employees.SingleOrDefaultAsync(nd=> nd.EmployeeId == storedToken.EmployeeId);
+                // Tạo mới AccessToken và trả về
+                var user = await _context.Employees.SingleOrDefaultAsync(nd => nd.EmployeeId == storedToken.EmployeeId);
                 var token = await GenerateToken(user);
                 return Ok(new ApiResponse
                 {
                     Success = true,
-                    Message = "Renew token success",
+                    Message = "Tạo mới token thành công",
                     Data = token,
                 });
-              
+
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                return BadRequest( new ApiResponse
+                return BadRequest(new ApiResponse
                 {
                     Success = false,
-                    Message = "Something went wrong",
-
+                    Message = "Có lỗi xảy ra",
                 });
             }
         }
+
 
         private DateTime ConvertUnixTimeToDateTime(long utcExpriceDate)
         {
