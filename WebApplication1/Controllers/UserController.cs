@@ -181,11 +181,12 @@ namespace OrderRestaurant.Controllers
                 // Kiểm tra thời gian hết hạn của RefreshToken
                 if (storedToken.ExpiredAt < DateTime.UtcNow)
                 {
-                    return Ok(new ApiResponse
+                    return Unauthorized(new ApiResponse
                     {
                         Success = false,
                         Message = "Refresh token đã hết hạn",
                     });
+
                 }
                 // Kiểm tra 4: Kiểm tra RefreshToken đã được sử dụng hoặc bị thu hồi chưa
                 if (storedToken.IsUsed)

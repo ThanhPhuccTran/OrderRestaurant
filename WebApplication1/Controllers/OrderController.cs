@@ -12,9 +12,11 @@ using OrderRestaurant.DTO.InvoiceDTO;
 using OrderRestaurant.DTO.OrderDetailsDTO;
 using OrderRestaurant.DTO.OrderDTO;
 using OrderRestaurant.DTO.TableDTO;
+using OrderRestaurant.Helpers;
 using OrderRestaurant.Model;
 using OrderRestaurant.Service;
 using System.Globalization;
+using static Azure.Core.HttpHeader;
 
 namespace OrderRestaurant.Controllers
 {
@@ -24,79 +26,31 @@ namespace OrderRestaurant.Controllers
     {
         private readonly IOrder _orderRepository;
         private readonly ApplicationDBContext _context;
-        public OrderController(ApplicationDBContext context, IOrder orderRepository)
+        private readonly ICommon<OrderModel> _common;
+        public OrderController(ApplicationDBContext context, IOrder orderRepository, ICommon<OrderModel> common)
         {
             _orderRepository = orderRepository;
             _context = context;
+            _common = common;
         }
-        [HttpGet("get-search-all")]
-        public async Task<IActionResult> Search(int page = 1, int pageSize = 10)
+        [HttpGet("get-search-page")]
+        public async Task<IActionResult> SearchAndPaginate([FromQuery] QuerryObject parameters)
         {
-            if (!ModelState.IsValid)
+            var (totalItems, totalPages, orders) = await _common.SearchAndPaginate(parameters);
+
+            if (totalItems == 0)
             {
-                return BadRequest(ModelState);
+                return NotFound("Không tìm thấy kết quả");
             }
-            try
+
+            var response = new
             {
-                var model = _context.Orders
-                    .OrderByDescending(s => s.CreationTime)
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .Select(s => new OrderModel
-                    {
+                TotalItems = totalItems,
+                TotalPages = totalPages,
+                Orders = orders
+            };
 
-                        OrderId = s.OrderId,
-                        EmployeeId = s.EmployeeId,
-                        TableId = s.TableId,
-                        CreationTime = s.CreationTime,
-                        ReceivingTime = s.ReceivingTime,
-                        PaymentTime = s.PaymentTime,
-                        Pay = s.Pay,
-                        Note = s.Note,
-                        Code = s.Code,
-                        Employees = _context.Employees
-                                .Where(a => a.EmployeeId == s.EmployeeId)
-                                .Select(o => new EmployeesDTO
-                                {
-                                    EmployeeId = o.EmployeeId,
-                                    EmployeeName = o.EmployeeName,
-                                    Email = o.Email,
-                                    Password = o.Password,
-                                    Phone = o.Password,
-                                    Image = o.Image
-
-                                })
-                                .FirstOrDefault(),
-                        Statuss = _context.Statuss
-                                .Where(a => a.Code == s.Code && a.Type == "Order")
-                                .Select(o => new ManageStatusDTO
-                                {
-                                    StatusId = o.StatusId,
-                                    Code = o.Code,
-                                    Type = o.Type,
-                                    Value = o.Value,
-                                    Description = o.Description,
-                                })
-                                .FirstOrDefault(),
-                        Tables = _context.Tables.Where(a => a.TableId == s.TableId)
-                                .Select(o => new TablesDTO
-                                {
-                                    TableId = o.TableId,
-                                    TableName = o.TableName,
-                                    Note = o.Note,
-                                    QR_id = o.QR_id,
-                                    Code = o.Code
-                                })
-                                .FirstOrDefault(),
-                    }).ToList();
-
-
-                return Ok(model);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Bị lỗi: {ex.Message}");
-            }
+            return Ok(response);
         }
 
         [HttpGet("get-order-all")]
@@ -104,58 +58,19 @@ namespace OrderRestaurant.Controllers
         {
 
 
-            var model = _context.Orders
-                .OrderByDescending(s => s.CreationTime)
-                .Select(s => new OrderModel
-                {
-
-                    OrderId = s.OrderId,
-                    EmployeeId = s.EmployeeId,
-                    TableId = s.TableId,
-                    CreationTime = s.CreationTime,
-                    ReceivingTime = s.ReceivingTime,
-                    PaymentTime = s.PaymentTime,
-                    Pay = s.Pay,
-                    Note = s.Note,
-                    Code = s.Code,
-                    Employees = _context.Employees
-                            .Where(a => a.EmployeeId == s.EmployeeId)
-                            .Select(o => new EmployeesDTO
-                            {
-                                EmployeeId = o.EmployeeId,
-                                EmployeeName = o.EmployeeName,
-                                Email = o.Email,
-                                Password = o.Password,
-                                Phone = o.Password,
-                                Image = o.Image
-
-                            })
-                            .FirstOrDefault(),
-                    Statuss = _context.Statuss
-                            .Where(a => a.Code == s.Code && a.Type == "Order")
-                            .Select(o => new ManageStatusDTO
-                            {
-                                StatusId = o.StatusId,
-                                Code = o.Code,
-                                Type = o.Type,
-                                Value = o.Value,
-                                Description = o.Description,
-                            })
-                            .FirstOrDefault(),
-                    Tables = _context.Tables.Where(a => a.TableId == s.TableId)
-                            .Select(o => new TablesDTO
-                            {
-                                TableId = o.TableId,
-                                TableName = o.TableName,
-                                Note = o.Note,
-                                QR_id = o.QR_id,
-                                Code = o.Code
-                            })
-                            .FirstOrDefault(),
-                }).ToList();
-
-
-            return Ok(model);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var orders = await _orderRepository.GetAllOrders();
+                return Ok(orders);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
         }
 
 
@@ -168,83 +83,14 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
-
-                var model = _context.OrderDetails
-                    .Where(s => s.OrderId == orderId)
-                    .Include(s => s.Food)
-                    .Include(s => s.Order.Employees)
-                    .Include(s => s.Order.Tables)
-                    .Select(s => new OrderDetailModel
-                    {
-                        OrderId = s.OrderId,
-                        FoodId = s.FoodId,
-                        Quantity = s.Quantity,
-                        UnitPrice = s.UnitPrice,
-                        Note = s.Note,
-                        TotalAmount = s.TotalAmount,
-
-                        Foods = _context.Foods.Where(a => a.FoodId == s.FoodId)
-                                           .Select(h => new FoodsDTO
-                                           {
-                                               FoodId = h.FoodId,
-                                               NameFood = h.NameFood,
-                                               UnitPrice = h.UnitPrice,
-                                               UrlImage = h.UrlImage,
-                                               CategoryId = h.CategoryId
-                                           }).FirstOrDefault() ?? new FoodsDTO(),
-                        Orders = new Order_DetailsDTO
-                        {
-                            OrderId = s.Order.OrderId,
-                            EmployeeId = s.Order.Employees != null ? s.Order.Employees.EmployeeId : null,
-                            TableId = s.Order.TableId,
-                            Code = s.Order.Code,
-                            Pay = _context.OrderDetails
-                                          .Where(od => od.OrderId == s.Order.OrderId)
-                                          .Sum(od => od.TotalAmount),
-                            CreationTime = s.Order.CreationTime,
-                            PaymentTime = s.Order.PaymentTime??null,
-                            ReceivingTime = s.Order.ReceivingTime ?? null,
-                            Note = s.Note,
-                            CustormerId = s.Order.CustomerId??null,
-
-                            Employees = s.Order.Employees != null ? new EmployeesDTO
-                                {
-                                    EmployeeId = s.Order.Employees.EmployeeId,
-                                    EmployeeName = s.Order.Employees.EmployeeName,
-                                    Image = s.Order.Employees.Image,
-                                    Phone = s.Order.Employees.Phone,
-                                    Email = s.Order.Employees.Email,
-                                    Password = s.Order.Employees.Password,
-                                } : null,
-                            Tables = new TablesDTO
-                                {
-                                    TableId = s.Order.Tables.TableId,
-                                    TableName = s.Order.Tables.TableName,
-                                    Code = s.Order.Tables.Code,
-                                    Note = s.Order.Tables.Note,
-                                    QR_id = s.Order.Tables.QR_id,
-                                },
-                            Statuss = _context.Statuss
-                                            .Where(a => a.Code == s.Order.Code && a.Type == "Order")
-                                            .Select(o => new ManageStatusDTO
-                                            {
-                                                StatusId = o.StatusId,
-                                                Code = o.Code,
-                                                Type = o.Type,
-                                                Value = o.Value,
-                                                Description = o.Description,
-                                            })
-                                            .FirstOrDefault(),
-
-                        }
-                    }).ToList();
-                return Ok(model);
+                var orderDetails = await _orderRepository.GetOrderDetails(orderId);
+                return Ok(orderDetails);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Bị lỗi: {ex.Message}");
+                return StatusCode(500, $"Lỗi: {ex.Message}");
             }
-        }
+         }
 
 
         [HttpPost("createOrder")]
@@ -255,46 +101,14 @@ namespace OrderRestaurant.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
+            var result = await _orderRepository.CreateOrderAsync(cartDto);
+            if (result)
             {
-
-                var order = new Order
-                {
-                    TableId = cartDto.TableId,
-                    CreationTime = DateTime.Now,
-                    Code = Constants.ORDER_INIT,
-                    Pay = cartDto.TotalAmount,
-                    Note = "",
-                };
-                _context.Orders.Add(order);
-                await _context.SaveChangesAsync();
-                
-                foreach (var item in cartDto.Items)
-                {
-                    var food = await _context.Foods.FindAsync(item.Foods.FoodId);
-                    Console.WriteLine(food);
-                    if (food == null)
-                    {
-                        return NotFound("Không tìm thấy ");
-                    }
-                    var orderDetails = new OrderDetails
-                    {
-                        OrderId = order.OrderId,
-                        Quantity = item.Quantity,
-                        UnitPrice = food.UnitPrice,
-                        Note = "",
-                        TotalAmount = item.Quantity * food.UnitPrice,
-                        FoodId = item.Foods.FoodId
-                    };
-                    _context.OrderDetails.Add(orderDetails);
-                }
-                await _context.SaveChangesAsync();
-
                 return Ok("THÊM VÀO GIỎ ĐƠN HÀNG THÀNH CÔNG");
             }
-            catch (Exception ex)
+            else
             {
-                return StatusCode(500, $"Bị lỗi: {ex.Message}");
+                return StatusCode(500, "Đã xảy ra lỗi khi tạo đơn hàng");
             }
         }
 
@@ -314,21 +128,15 @@ namespace OrderRestaurant.Controllers
             {
                 return BadRequest(ModelState);
             }
-            try
+
+            var result = await _orderRepository.DeleteOrderAsync(id);
+            if (result)
             {
-                var model = await _context.Orders.Include(o => o.OrderDetails).FirstOrDefaultAsync(i => i.OrderId == id);
-                if (model == null)
-                {
-                    return NotFound("Không tìm thấy mã Order");
-                }
-                _context.OrderDetails.RemoveRange(model.OrderDetails); //Để xóa list liên quan OrderId
-                _context.Orders.Remove(model); // xóa một cái OrderId
-                await _context.SaveChangesAsync();
                 return Ok("Xóa thành công");
             }
-            catch (Exception ex)
+            else
             {
-                return StatusCode(500, $"Bị lỗi: {ex.Message}");
+                return NotFound("Không tìm thấy mã Order hoặc đã xảy ra lỗi khi xóa");
             }
         }
         [HttpDelete("DeleteOrderDetail/{orderId}/{foodId}")]
@@ -340,33 +148,15 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
-                // Tìm kiếm OrderDetails cần xóa
-                var orderDetailsToDelete = _context.OrderDetails
-                    .Where(od => od.OrderId == orderId && od.FoodId == foodId)
-                    .ToList();
-
-                // Kiểm tra nếu không tìm thấy OrderDetails
-                if (orderDetailsToDelete.Count == 0)
+                var result = await _orderRepository.DeleteOrderDetailAsync(orderId, foodId);
+                if (result)
                 {
-                    return NotFound("Không tìm thấy OrderDetails");
+                    return Ok("Xóa OrderDetails thành công");
                 }
-
-                // Xóa OrderDetails 
-                _context.OrderDetails.RemoveRange(orderDetailsToDelete);
-                // Tính tổng TotalAmount của các OrderDetails cần xóa
-                decimal? deletedAmount = orderDetailsToDelete.Sum(od => od.TotalAmount);
-
-                // Xóa OrderDetails
-                _context.OrderDetails.RemoveRange(orderDetailsToDelete);
-
-                // Cập nhật lại trường Pay của Order
-                var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId);
-                if (order != null)
+                else
                 {
-                    order.Pay = order.Pay - deletedAmount;
+                    return NotFound("Không tìm thấy OrderDetails hoặc đã xảy ra lỗi khi xóa");
                 }
-                await _context.SaveChangesAsync();
-                return Ok("Xóa OrderDetails thành công");
             }
             catch (Exception ex)
             {
@@ -383,35 +173,15 @@ namespace OrderRestaurant.Controllers
 
             try
             {
-
-                var orderDetailToUpdate = await _context.OrderDetails.FirstOrDefaultAsync(od => od.OrderId == orderId && od.FoodId == foodId);
-                if (orderDetailToUpdate == null)
+                var result = await _orderRepository.UpdateOrderDetailAsync(orderId, foodId, orderDetailDto);
+                if (result)
                 {
-                    return NotFound("Không tìm thấy");
+                    return Ok("Cập nhật OrderDetail thành công");
                 }
-                //Lấy giá tiền của FoodId
-                var foodPrice = await _context.Foods.Where(f => f.FoodId == foodId).Select(f => f.UnitPrice).FirstOrDefaultAsync();
-                // Cập nhật thông tin của OrderDetail
-                orderDetailToUpdate.Quantity = orderDetailDto.Quantity;
-
-                orderDetailToUpdate.Note = orderDetailDto.Note;
-
-                // tính tổng tiền
-                orderDetailToUpdate.TotalAmount = orderDetailDto.Quantity * foodPrice;
-
-                // Lấy tổng số tiền của các OrderDetail còn lại của Order
-                decimal? totalAmount = _context.OrderDetails
-                    .Where(od => od.OrderId == orderId && od.FoodId != foodId)
-                    .Sum(od => od.TotalAmount);
-                // Cập nhật lại trường Pay của Order
-                var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId);
-                if (order != null)
+                else
                 {
-                    order.Pay = totalAmount + orderDetailToUpdate.TotalAmount;
+                    return NotFound("Không tìm thấy OrderDetail hoặc đã xảy ra lỗi khi cập nhật");
                 }
-
-                await _context.SaveChangesAsync();
-                return Ok("Cập nhật OrderDetail thành công");
             }
             catch (Exception ex)
             {

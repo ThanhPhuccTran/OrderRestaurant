@@ -18,13 +18,15 @@ namespace OrderRestaurant.Controllers
         private readonly IFood _foodRepository;
         private readonly ApplicationDBContext _context;
         private readonly ICategory _categoryRespository;
+        private readonly ICommon<FoodModel> _common;
         private readonly Microsoft.AspNetCore.Hosting.IHostingEnvironment env;
-        public FoodController(IFood foodRepository,ICategory categoryRespository, ApplicationDBContext context, Microsoft.AspNetCore.Hosting.IHostingEnvironment env)
+        public FoodController(IFood foodRepository,ICategory categoryRespository, ApplicationDBContext context, Microsoft.AspNetCore.Hosting.IHostingEnvironment env , ICommon<FoodModel> common)
         {
             _foodRepository = foodRepository;
             _context = context;
             this.env = env;
             _categoryRespository = categoryRespository;
+            _common = common;
         }
         //https://localhost:7014/api/Food/search
         //Phân trang và tìm kiếm , tìm kiếm theo giá asc desc , tìm theo category
@@ -46,6 +48,8 @@ namespace OrderRestaurant.Controllers
 
             return Ok(response);
         }
+
+
         // https://localhost:7014/api/Food
         [HttpGet]
         public async Task<IActionResult> GetFoodAll()
@@ -70,6 +74,27 @@ namespace OrderRestaurant.Controllers
 
 
             return Ok(model);
+        }
+
+       
+        [HttpGet("get-search-page")]
+        public async Task<IActionResult> SearchAndPaginate([FromQuery] QuerryObject parameters)
+        {
+            var (totalItems, totalPages, foods) = await _common.SearchAndPaginate(parameters);
+
+            if (totalItems == 0)
+            {
+                return NotFound("Không tìm thấy kết quả");
+            }
+
+            var response = new
+            {
+                TotalItems = totalItems,
+                TotalPages = totalPages,
+                Foods = foods
+            };
+
+            return Ok(response);
         }
         [HttpGet]
         [Route("{foodid}")]
