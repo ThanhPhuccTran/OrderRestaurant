@@ -30,6 +30,12 @@ namespace WebApplication1
             builder.Services.AddScoped<ITable, TableResponsitory>();
             builder.Services.AddScoped<IOrder, OrderResponsitory>();
             builder.Services.AddScoped<IConfig, ConfigResponsitory>();
+            builder.Services.AddScoped<IStatistics, StatisticsResponsitory>();
+
+            builder.Services.AddScoped<ICommon<FoodModel>, FoodResponsitory>();
+            builder.Services.AddScoped<ICommon<Table>, TableResponsitory>();
+            builder.Services.AddScoped<ICommon<OrderModel>, OrderResponsitory>();
+
             var configuration = builder.Configuration;
             builder.Services.AddDbContext<ApplicationDBContext>(options =>
             {

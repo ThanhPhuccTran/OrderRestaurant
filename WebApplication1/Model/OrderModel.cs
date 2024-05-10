@@ -23,9 +23,7 @@ namespace OrderRestaurant.Model
         public string? Note { get; set; }
         public int Code { get; set; }
         
-       /* public string FormattedCreationTime => CreationTime?.ToString("dd-MM-yyyy");
-        public string FormattedReceivingTime => ReceivingTime.HasValue ? ReceivingTime.Value.ToString("dd-MM-yyyy") : "";
-        public string FormattedPaymentTime => PaymentTime.HasValue ? PaymentTime.Value.ToString("dd-MM-yyyy") : "";*/
+      
         public Customer? Customers { get; set; }
 
         public TablesDTO? Tables { get; set; }

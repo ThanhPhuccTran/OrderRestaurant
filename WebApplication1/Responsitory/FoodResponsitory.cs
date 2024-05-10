@@ -1,13 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OrderRestaurant.Data;
+using OrderRestaurant.DTO.ConfigDTO;
 using OrderRestaurant.DTO.FoodDTO;
 using OrderRestaurant.Helpers;
 using OrderRestaurant.Model;
 using OrderRestaurant.Service;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace OrderRestaurant.Responsitory
 {
-    public class FoodResponsitory : IFood
+    public class FoodResponsitory : IFood, ICommon<FoodModel>
     {
         private readonly ApplicationDBContext _context;
         public FoodResponsitory(ApplicationDBContext context)
@@ -167,5 +169,45 @@ namespace OrderRestaurant.Responsitory
             return (totalItems, totalPages, foods);
         }
 
+        public async Task<(int totalItems, int totalPages, List<FoodModel> items)> SearchAndPaginate(QuerryObject querryObject)
+        {
+            var query = _context.Foods
+                                .Include(f=>f.Category)
+                                .AsQueryable();
+
+            // Áp dụng tìm kiếm nếu có
+            if (!string.IsNullOrWhiteSpace(querryObject.Search))
+            {
+                query = query.Where(f => EF.Functions.Like(f.NameFood, $"%{querryObject.Search}%"));
+            }
+
+            // Tính toán số trang và lấy dữ liệu phân trang
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalItems / querryObject.PageSize);
+            var skipNumber = (querryObject.PageNumber - 1) * querryObject.PageSize;
+            var items = await query.Skip(skipNumber).Take(querryObject.PageSize).ToListAsync();
+            var foods = await query
+                .Select(f => new FoodModel
+                {
+                    FoodId = f.FoodId,
+                    NameFood = f.NameFood,
+                    UnitPrice = f.UnitPrice,
+                    UrlImage = f.UrlImage,
+                    CategoryId = f.CategoryId,
+                    Category = _context.Categoies
+                                   .Where(a => a.CategoryId == f.CategoryId )
+                                   .Select(o => new Category
+                                   {
+                                       CategoryId = o.CategoryId,
+                                       CategoryName = o.CategoryName,
+                                       Description = o.Description,
+                                   })
+                                   .FirstOrDefault(),
+                })
+                .Skip(skipNumber)
+                .Take(querryObject.PageSize)
+                .ToListAsync();
+            return (totalItems, totalPages, foods);
+        }
     }
 }

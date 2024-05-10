@@ -14,31 +14,33 @@ namespace OrderRestaurant.Controllers
     {
         private readonly ApplicationDBContext _context;
         private readonly ITable _table;
-        public TableController(ApplicationDBContext context , ITable table)
+        private readonly ICommon<Table> _common;
+        public TableController(ApplicationDBContext context , ITable table , ICommon<Table> common)
         {
             _context = context;
             _table = table;
+            _common = common;
         }
 
-        [HttpGet("search")]
-        public async Task<IActionResult> Search([FromQuery] QuerryObject querry, string search = "")
+        
+
+        [HttpGet("get-search-page")]
+        public async Task<IActionResult> SearchAndPaginate([FromQuery] QuerryObject parameters)
         {
-            if (querry.PageNumber <= 0 || querry.PageSize <= 0)
-            {
-                return BadRequest("Không hợp lệ");
-            }
-            var (totalItems, totalPages, tables) = await _table.GetSearch(querry, search);
+            var (totalItems, totalPages, tables) = await _common.SearchAndPaginate(parameters);
+
             if (totalItems == 0)
             {
                 return NotFound("Không tìm thấy kết quả");
             }
+
             var response = new
             {
                 TotalItems = totalItems,
                 TotalPages = totalPages,
-                Tables = tables,
-
+                Tabkes = tables
             };
+
             return Ok(response);
         }
 

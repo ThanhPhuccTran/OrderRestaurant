@@ -7,7 +7,7 @@ using OrderRestaurant.Service;
 
 namespace OrderRestaurant.Responsitory
 {
-    public class TableResponsitory : ITable
+    public class TableResponsitory : ITable,ICommon<Table>
     {
         private readonly ApplicationDBContext _dbContext;
         public TableResponsitory(ApplicationDBContext dbContext)
@@ -69,6 +69,25 @@ namespace OrderRestaurant.Responsitory
         public async Task<Table?> GetTableById(int tableId)
         {
             return await _dbContext.Tables.FindAsync(tableId);
+        }
+
+        public async Task<(int totalItems, int totalPages, List<Table> items)> SearchAndPaginate(QuerryObject querryObject)
+        {
+            var query = _dbContext.Tables.AsQueryable();
+
+            // Áp dụng tìm kiếm nếu có
+            if (!string.IsNullOrWhiteSpace(querryObject.Search))
+            {
+                query = query.Where(f => EF.Functions.Like(f.TableName, $"%{querryObject.Search}%"));
+            }
+
+            // Tính toán số trang và lấy dữ liệu phân trang
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalItems / querryObject.PageSize);
+            var skipNumber = (querryObject.PageNumber - 1) * querryObject.PageSize;
+            var items = await query.Skip(skipNumber).Take(querryObject.PageSize).ToListAsync();
+
+            return (totalItems, totalPages, items);
         }
 
         public Task<bool> TableExit(int id)
