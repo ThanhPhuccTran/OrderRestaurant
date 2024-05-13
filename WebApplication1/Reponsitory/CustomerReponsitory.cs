@@ -5,10 +5,10 @@ using OrderRestaurant.Service;
 
 namespace OrderRestaurant.Responsitory
 {
-    public class CustomerResponsitory : ICustomer
+    public class CustomerReponsitory : ICustomer
     {
         private readonly ApplicationDBContext _dbContext;
-        public CustomerResponsitory(ApplicationDBContext context)
+        public CustomerReponsitory(ApplicationDBContext context)
         {
             _dbContext = context;
         }

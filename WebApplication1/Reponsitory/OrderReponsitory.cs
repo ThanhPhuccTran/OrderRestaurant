@@ -15,10 +15,10 @@ using System;
 
 namespace OrderRestaurant.Responsitory
 {
-    public class OrderResponsitory : IOrder, ICommon<OrderModel>
+    public class OrderReponsitory : IOrder, ICommon<OrderModel>
     {
         private readonly ApplicationDBContext _dbContext;
-        public OrderResponsitory(ApplicationDBContext dbContext)
+        public OrderReponsitory(ApplicationDBContext dbContext)
         {
             _dbContext = dbContext;
         }

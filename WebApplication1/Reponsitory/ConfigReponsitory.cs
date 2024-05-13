@@ -4,10 +4,10 @@ using OrderRestaurant.Service;
 
 namespace OrderRestaurant.Responsitory
 {
-    public class ConfigResponsitory : IConfig
+    public class ConfigReponsitory : IConfig
     {
         private readonly ApplicationDBContext _context;
-        public ConfigResponsitory(ApplicationDBContext context)
+        public ConfigReponsitory(ApplicationDBContext context)
         {
             _context = context;
         }

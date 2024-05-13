@@ -7,10 +7,10 @@ using OrderRestaurant.Service;
 
 namespace OrderRestaurant.Responsitory
 {
-    public class TableResponsitory : ITable,ICommon<Table>
+    public class TableReponsitory : ITable,ICommon<Table>
     {
         private readonly ApplicationDBContext _dbContext;
-        public TableResponsitory(ApplicationDBContext dbContext)
+        public TableReponsitory(ApplicationDBContext dbContext)
         {
 
             _dbContext = dbContext;

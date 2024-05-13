@@ -47,5 +47,8 @@
         public const string ROLE_EMPLOYEE = "employee";
         public const string ROLE_ADMIN = "admin";
 
+
+        public const string Get = "Get";
+        public const string Post = "Post";
     }
 }

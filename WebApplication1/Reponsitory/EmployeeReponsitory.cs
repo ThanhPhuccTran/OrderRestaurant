@@ -8,10 +8,10 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace OrderRestaurant.Responsitory
 {
-    public class EmployeeResponsitory : IEmployee
+    public class EmployeeReponsitory : IEmployee
     {
         private readonly ApplicationDBContext _dbContext;
-        public EmployeeResponsitory(ApplicationDBContext context)
+        public EmployeeReponsitory(ApplicationDBContext context)
         {
             _dbContext = context;
         }

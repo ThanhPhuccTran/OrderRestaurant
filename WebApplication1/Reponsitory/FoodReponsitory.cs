@@ -9,10 +9,10 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace OrderRestaurant.Responsitory
 {
-    public class FoodResponsitory : IFood, ICommon<FoodModel>
+    public class FoodReponsitory : IFood, ICommon<FoodModel>
     {
         private readonly ApplicationDBContext _context;
-        public FoodResponsitory(ApplicationDBContext context)
+        public FoodReponsitory(ApplicationDBContext context)
         {
             _context = context;
         }
