@@ -7,10 +7,10 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace OrderRestaurant.Responsitory
 {
-    public class CategoryResponsitory : ICategory
+    public class CategoryReponsitory : ICategory
     {
         private readonly ApplicationDBContext _context;
-        public CategoryResponsitory(ApplicationDBContext context)
+        public CategoryReponsitory(ApplicationDBContext context)
         {
             _context = context;
         }

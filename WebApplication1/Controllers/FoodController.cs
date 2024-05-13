@@ -7,7 +7,9 @@ using OrderRestaurant.DTO.CategoryDTO;
 using OrderRestaurant.DTO.FoodDTO;
 using OrderRestaurant.Helpers;
 using OrderRestaurant.Model;
+using OrderRestaurant.Reponsitory;
 using OrderRestaurant.Service;
+using System.Security.Claims;
 
 namespace OrderRestaurant.Controllers
 {
@@ -20,19 +22,32 @@ namespace OrderRestaurant.Controllers
         private readonly ICategory _categoryRespository;
         private readonly ICommon<FoodModel> _common;
         private readonly Microsoft.AspNetCore.Hosting.IHostingEnvironment env;
-        public FoodController(IFood foodRepository,ICategory categoryRespository, ApplicationDBContext context, Microsoft.AspNetCore.Hosting.IHostingEnvironment env , ICommon<FoodModel> common)
+        private readonly IPermission _permissionRepository;
+        private const string TYPE_FOOD = "Food";
+        public FoodController(IFood foodRepository,ICategory categoryRespository, ApplicationDBContext context, Microsoft.AspNetCore.Hosting.IHostingEnvironment env , ICommon<FoodModel> common , IPermission permissionRepository)
         {
             _foodRepository = foodRepository;
             _context = context;
             this.env = env;
             _categoryRespository = categoryRespository;
             _common = common;
+            _permissionRepository = permissionRepository;
         }
+
         //https://localhost:7014/api/Food/search
         //Phân trang và tìm kiếm , tìm kiếm theo giá asc desc , tìm theo category
         [HttpGet("search")]
         public async Task<IActionResult> Search([FromQuery] QuerryFood querry, string search = "")
         {
+            var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+            if (roleName ==null)
+            {
+                return BadRequest("Ko co rolename");
+            }
+
+            if (!_permissionRepository.CheckPermission(roleName, Constants.Get, TYPE_FOOD))
+                return Unauthorized();
+
             var (totalItems, totalPages, foods) = await _foodRepository.GetSearchFood(querry, search);
 
             if(totalItems == 0)

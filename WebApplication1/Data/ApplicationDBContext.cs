@@ -16,10 +16,12 @@ namespace OrderRestaurant.Data
         public DbSet<ManageStatus> Statuss { get; set; }
         public DbSet<Requirements> Requests { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<Permission> Permissions { get; set; }
 
        // public DbSet<Cart> CartUser { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Permission>().HasNoKey();
             modelBuilder.Entity<OrderDetails>()
             .HasKey(ba => new { ba.OrderId, ba.FoodId });
 

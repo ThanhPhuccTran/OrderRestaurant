@@ -5,6 +5,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using OrderRestaurant.Data;
 using OrderRestaurant.Model;
+using OrderRestaurant.Reponsitory;
 using OrderRestaurant.Responsitory;
 using OrderRestaurant.Service;
 using System.Text;
@@ -23,18 +24,19 @@ namespace WebApplication1
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            builder.Services.AddScoped<ICategory, CategoryResponsitory>();
-            builder.Services.AddScoped<IFood, FoodResponsitory>();
-            builder.Services.AddScoped<ICustomer, CustomerResponsitory>();
-            builder.Services.AddScoped<IEmployee, EmployeeResponsitory>();
-            builder.Services.AddScoped<ITable, TableResponsitory>();
-            builder.Services.AddScoped<IOrder, OrderResponsitory>();
-            builder.Services.AddScoped<IConfig, ConfigResponsitory>();
-            builder.Services.AddScoped<IStatistics, StatisticsResponsitory>();
+            builder.Services.AddScoped<ICategory, CategoryReponsitory>();
+            builder.Services.AddScoped<IFood, FoodReponsitory>();
+            builder.Services.AddScoped<ICustomer, CustomerReponsitory>();
+            builder.Services.AddScoped<IEmployee, EmployeeReponsitory>();
+            builder.Services.AddScoped<ITable, TableReponsitory>();
+            builder.Services.AddScoped<IOrder, OrderReponsitory>();
+            builder.Services.AddScoped<IConfig, ConfigReponsitory>();
+            builder.Services.AddScoped<IStatistics, StatisticsReponsitory>();
+            builder.Services.AddScoped<IPermission, PermissionReponsitory>();
 
-            builder.Services.AddScoped<ICommon<FoodModel>, FoodResponsitory>();
-            builder.Services.AddScoped<ICommon<Table>, TableResponsitory>();
-            builder.Services.AddScoped<ICommon<OrderModel>, OrderResponsitory>();
+            builder.Services.AddScoped<ICommon<FoodModel>, FoodReponsitory>();
+            builder.Services.AddScoped<ICommon<Table>, TableReponsitory>();
+            builder.Services.AddScoped<ICommon<OrderModel>, OrderReponsitory>();
 
             var configuration = builder.Configuration;
             builder.Services.AddDbContext<ApplicationDBContext>(options =>
