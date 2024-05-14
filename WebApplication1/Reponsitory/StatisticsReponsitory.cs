@@ -210,7 +210,7 @@ namespace OrderRestaurant.Responsitory
         }
 
 
-        public async Task<(decimal, OrderDetailsStatistics, OrderDetailsStatistics, Dictionary<string, decimal>, Dictionary<string, int>, FoodStatisticsResult)> RevenueByDate(DateTime startDate, DateTime endDate)
+        public async Task<(decimal, int, OrderDetailsStatistics, OrderDetailsStatistics, Dictionary<string, decimal>, Dictionary<string, int>, Dictionary<string, int>, FoodStatisticsResult)> RevenueByDate(DateTime startDate, DateTime endDate)
         {
             if (startDate > endDate)
             {
@@ -219,7 +219,7 @@ namespace OrderRestaurant.Responsitory
 
             Dictionary<string, decimal> doanhso;
             Dictionary<string, int> ordersSummary = new Dictionary<string, int>();
-
+            Dictionary<string, int> foodSummary = new Dictionary<string, int>();
             if (startDate.Month != endDate.Month)
             {
                 doanhso = await GetTotalRevenueByMonthRange(startDate, endDate);
@@ -240,6 +240,21 @@ namespace OrderRestaurant.Responsitory
                 {
                     ordersSummary.Add(item.Key, item.Value);
                 }
+                var foodsByMonth = await _context.OrderDetails
+                                                .Where(od => od.Order.Code == Constants.ORDER_PAYMENT
+                                                        && od.Order.PaymentTime != null
+                                                        && od.Order.PaymentTime.Value.Date >= startDate.Date
+                                                        && od.Order.PaymentTime.Value.Date <= endDate.Date)
+                                                .GroupBy(o => o.Order.PaymentTime.Value.Month)
+                                                .Select(g => new
+                                                {
+                                                    Month = g.Key,
+                                                    FoodCount = g.Sum(oi => oi.Quantity)
+                                                }).ToDictionaryAsync(g => $"Tháng {g.Month}", g => g.FoodCount);
+                foreach (var item in foodsByMonth)
+                {
+                    foodSummary.Add(item.Key, item.Value);
+                }
             }
             else
             {
@@ -249,17 +264,33 @@ namespace OrderRestaurant.Responsitory
                             o.PaymentTime != null &&
                             o.PaymentTime.Value.Date >= startDate.Date &&
                             o.PaymentTime.Value.Date <= endDate.Date)
-                    .GroupBy(o => o.PaymentTime.Value.Day)
+                    .GroupBy(o => o.PaymentTime.Value.Date)
                     .Select(g => new
                     {
-                        Day = g.Key,
+                        Date = $"Ngày {g.Key.Day}/{g.Key.Month}/{g.Key.Year}",
                         OrderCount = g.Count()
                     })
-                    .ToDictionaryAsync(g => $"Ngày {g.Day}", g => g.OrderCount);
+                    .ToDictionaryAsync(g => g.Date, g => g.OrderCount);
 
                 foreach (var item in ordersByDate)
                 {
                     ordersSummary.Add(item.Key, item.Value);
+                }
+
+                var foodsByMonth = await _context.OrderDetails
+                                                .Where(od => od.Order.Code == Constants.ORDER_PAYMENT
+                                                        && od.Order.PaymentTime != null
+                                                        && od.Order.PaymentTime.Value.Date >= startDate.Date
+                                                        && od.Order.PaymentTime.Value.Date <= endDate.Date)
+                                                .GroupBy(o => o.Order.PaymentTime.Value.Date)
+                                                .Select(g => new
+                                                {
+                                                    Date = $"Ngày {g.Key.Day}/{g.Key.Month}/{g.Key.Year}",
+                                                    FoodCount = g.Sum(oi => oi.Quantity)
+                                                }).ToDictionaryAsync(g => g.Date, g => g.FoodCount);
+                foreach (var item in foodsByMonth)
+                {
+                    foodSummary.Add(item.Key, item.Value);
                 }
             }
 
@@ -269,11 +300,17 @@ namespace OrderRestaurant.Responsitory
                         o.PaymentTime.Value.Date >= startDate.Date &&
                         o.PaymentTime.Value.Date <= endDate.Date)
                 .SumAsync(o => o.Pay);
+            var totalOrder = await _context.Orders
+                                         .Where(o => o.Code == Constants.ORDER_PAYMENT &&
+                                                     o.PaymentTime != null &&
+                                                     o.PaymentTime.Value.Date >= startDate.Date &&
+                                                     o.PaymentTime.Value.Date <= endDate.Date)
+                                         .CountAsync();
 
             OrderDetailsStatistics leastUsedFoodTask = await GetLeastPopularFood(startDate, endDate);
             OrderDetailsStatistics popularUsedFoodTask = await GetMostPopularFood(startDate, endDate);
             FoodStatisticsResult foodStatistics = await GetFoodStatistics(startDate, endDate);
-            return ((decimal)total, leastUsedFoodTask, popularUsedFoodTask, doanhso, ordersSummary,foodStatistics);
+            return ((decimal)total, (int)totalOrder, leastUsedFoodTask, popularUsedFoodTask, doanhso, ordersSummary, foodSummary, foodStatistics);
         }
 
 

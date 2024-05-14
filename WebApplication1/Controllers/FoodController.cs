@@ -40,14 +40,7 @@ namespace OrderRestaurant.Controllers
         [HttpGet("search")]
         public async Task<IActionResult> Search([FromQuery] QuerryFood querry, string search = "")
         {
-            var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-            if (roleName ==null)
-            {
-                return BadRequest("Ko co rolename");
-            }
-
-            if (!_permissionRepository.CheckPermission(roleName, Constants.Get, TYPE_FOOD))
-                return Unauthorized();
+           
 
             var (totalItems, totalPages, foods) = await _foodRepository.GetSearchFood(querry, search);
 
@@ -114,15 +107,7 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
-                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-                if (roleName == null)
-                {
-                    return BadRequest("Ko co rolename");
-                }
-
-                if (!_permissionRepository.CheckPermission(roleName, Constants.Get, TYPE_FOOD))
-                    return Unauthorized();
-
+              
 
                 var (totalItems, totalPages, foods) = await _common.SearchAndPaginate(parameters);
 
@@ -155,15 +140,7 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
-                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-                if (roleName == null)
-                {
-                    return BadRequest("Ko co rolename");
-                }
-
-                if (!_permissionRepository.CheckPermission(roleName, Constants.Get, TYPE_FOOD))
-                    return Unauthorized();
-
+               
 
                 var food = await _context.Foods
                     .Where(s => s.FoodId == foodid)

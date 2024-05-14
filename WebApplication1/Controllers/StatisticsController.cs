@@ -227,7 +227,7 @@ namespace OrderRestaurant.Controllers
                     return BadRequest("Ngày bắt đầu không thể sau ngày kết thúc");
                 }
 
-                var (totalRevenue, leastUsedFood, popularUsedFood, doanhso,donhang,food) = await _statistics.RevenueByDate(startDate, endDate);
+                var (totalRevenue, totalOrder,leastUsedFood, popularUsedFood, doanhso,donhang,dayFood,food) = await _statistics.RevenueByDate(startDate, endDate);
                 /*var totalRevenue = result.Item1;
                 var leastUsedFood = result.Item2;
                 var popularUsedFood = result.Item3;
@@ -241,6 +241,8 @@ namespace OrderRestaurant.Controllers
                     PopularUsedFood = popularUsedFood,
                     DoanhSo = doanhso,
                     DonHang = donhang,
+                    TotalOrder = totalOrder,
+                    DayFood = dayFood,
                     Food = food,
                     
                 });

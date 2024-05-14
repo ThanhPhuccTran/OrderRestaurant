@@ -15,7 +15,7 @@ namespace OrderRestaurant.Service
         Task<FoodStatisticsResult> GetFoodStatistics(DateTime startDate, DateTime endDate);
         Task<OrderDetailsStatistics> GetMostPopularFood(DateTime startDate, DateTime endDate);
         Task<OrderDetailsStatistics> GetLeastPopularFood(DateTime startDate, DateTime endDate);
-        Task<(decimal, OrderDetailsStatistics, OrderDetailsStatistics, Dictionary<string, decimal>, Dictionary<string, int>, FoodStatisticsResult)> RevenueByDate(DateTime startDate, DateTime endDate);
+        Task<(decimal, int,OrderDetailsStatistics, OrderDetailsStatistics, Dictionary<string, decimal>, Dictionary<string, int>, Dictionary<string, int>, FoodStatisticsResult)> RevenueByDate(DateTime startDate, DateTime endDate);
 
 
 
