@@ -48,7 +48,10 @@
         public const string ROLE_ADMIN = "admin";
 
 
-        public const string Get = "Get";
-        public const string Post = "Post";
+        public const string Get = "get";
+        public const string Post = "post";
+        public const string Put = "put";
+        public const string Delete = "delete";
+
     }
 }

@@ -194,7 +194,7 @@ namespace OrderRestaurant.Responsitory
             return orderModels;
         }
 
-        public async Task<OrderDetailModel> GetOrderDetails(int orderId)
+        public async Task<List<OrderDetailModel>> GetOrderDetails(int orderId)
         {
             try
             {
@@ -268,7 +268,7 @@ namespace OrderRestaurant.Responsitory
                                 })
                                 .FirstOrDefault(),
                         }
-                    }).FirstOrDefaultAsync();
+                    }).ToListAsync();
 
                 return orderDetails;
             }
