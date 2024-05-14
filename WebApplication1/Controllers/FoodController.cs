@@ -24,6 +24,7 @@ namespace OrderRestaurant.Controllers
         private readonly Microsoft.AspNetCore.Hosting.IHostingEnvironment env;
         private readonly IPermission _permissionRepository;
         private const string TYPE_FOOD = "Food";
+       
         public FoodController(IFood foodRepository,ICategory categoryRespository, ApplicationDBContext context, Microsoft.AspNetCore.Hosting.IHostingEnvironment env , ICommon<FoodModel> common , IPermission permissionRepository)
         {
             _foodRepository = foodRepository;
@@ -73,43 +74,76 @@ namespace OrderRestaurant.Controllers
             {
                 return BadRequest(ModelState);
             }
-            /* var model = await _foodRepository.GetAllFoods();
-             var list = model.Select(hh => hh.ToFoodDto());
-             var path = env.WebRootPath;*/
-            var model = _context.Foods.Select(s => new FoodModel
+            try
             {
-                FoodId = s.FoodId,
-                NameFood = s.NameFood,
-                UnitPrice = s.UnitPrice,
-                UrlImage = s.UrlImage,
-                CategoryId = s.CategoryId,
-                Category = _context.Categoies.Where(a => a.CategoryId == s.CategoryId).FirstOrDefault(),
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return BadRequest("Ko co rolename");
+                }
 
-            }).ToList();
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Get, TYPE_FOOD))
+                    return Unauthorized();
+
+                var model = _context.Foods.Select(s => new FoodModel
+                {
+                    FoodId = s.FoodId,
+                    NameFood = s.NameFood,
+                    UnitPrice = s.UnitPrice,
+                    UrlImage = s.UrlImage,
+                    CategoryId = s.CategoryId,
+                    Category = _context.Categoies.Where(a => a.CategoryId == s.CategoryId).FirstOrDefault(),
+
+                }).ToList();
 
 
-            return Ok(model);
+                return Ok(model);
+            }catch(Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
         }
 
        
         [HttpGet("get-search-page")]
         public async Task<IActionResult> SearchAndPaginate([FromQuery] QuerryObject parameters)
         {
-            var (totalItems, totalPages, foods) = await _common.SearchAndPaginate(parameters);
-
-            if (totalItems == 0)
+            if (!ModelState.IsValid)
             {
-                return NotFound("Không tìm thấy kết quả");
+                return BadRequest(ModelState);
             }
-
-            var response = new
+            try
             {
-                TotalItems = totalItems,
-                TotalPages = totalPages,
-                Foods = foods
-            };
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return BadRequest("Ko co rolename");
+                }
 
-            return Ok(response);
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Get, TYPE_FOOD))
+                    return Unauthorized();
+
+
+                var (totalItems, totalPages, foods) = await _common.SearchAndPaginate(parameters);
+
+                if (totalItems == 0)
+                {
+                    return NotFound("Không tìm thấy kết quả");
+                }
+
+                var response = new
+                {
+                    TotalItems = totalItems,
+                    TotalPages = totalPages,
+                    Foods = foods
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
         }
         [HttpGet]
         [Route("{foodid}")]
@@ -119,26 +153,42 @@ namespace OrderRestaurant.Controllers
             {
                 return BadRequest(ModelState);
             }
-
-            var food = await _context.Foods
-                .Where(s => s.FoodId == foodid)
-                .Select(s => new FoodModel
-                {
-                    FoodId = s.FoodId,
-                    NameFood = s.NameFood,
-                    UnitPrice = s.UnitPrice,
-                    UrlImage = s.UrlImage,
-                    CategoryId = s.CategoryId,
-                    Category = _context.Categoies.FirstOrDefault(a => a.CategoryId == s.CategoryId)
-                })
-                .FirstOrDefaultAsync();
-
-            if (food == null)
+            try
             {
-                return NotFound(); // Trả về 404 nếu không tìm thấy thức ăn với mã ID tương ứng
-            }
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return BadRequest("Ko co rolename");
+                }
 
-            return Ok(food);
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Get, TYPE_FOOD))
+                    return Unauthorized();
+
+
+                var food = await _context.Foods
+                    .Where(s => s.FoodId == foodid)
+                    .Select(s => new FoodModel
+                    {
+                        FoodId = s.FoodId,
+                        NameFood = s.NameFood,
+                        UnitPrice = s.UnitPrice,
+                        UrlImage = s.UrlImage,
+                        CategoryId = s.CategoryId,
+                        Category = _context.Categoies.FirstOrDefault(a => a.CategoryId == s.CategoryId)
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (food == null)
+                {
+                    return NotFound(); // Trả về 404 nếu không tìm thấy thức ăn với mã ID tương ứng
+                }
+
+                return Ok(food);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
         }
 
         // https://localhost:7014/api/Food/post-with-image
@@ -146,33 +196,36 @@ namespace OrderRestaurant.Controllers
         
         public async Task<IActionResult> CreateFoodImage([FromBody]FoodImage p)
         {
-            var food = new Food { CategoryId = p.CategoryId, NameFood = p.NameFood, UnitPrice = p.UnitPrice, UrlImage = p.Image };
-            if(!await _categoryRespository.CategoryExit(p.CategoryId))
+            if (!ModelState.IsValid)
             {
-                return BadRequest("Loại món không được tìm thấy");
+                return BadRequest(ModelState);
             }
-           /* // Xử lý ảnh
-            if (p.Image.Length > 0)
+            try
             {
-                using (var ms = new MemoryStream())
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
                 {
-                    p.Image.CopyTo(ms);
-                    var imageBytes = ms.ToArray();
-                    var base64String = Convert.ToBase64String(imageBytes);
-                    food.UrlImage = base64String;
+                    return BadRequest("Ko co rolename");
                 }
-            }
-            else
+
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Post, TYPE_FOOD))
+                    return Unauthorized();
+
+                var food = new Food { CategoryId = p.CategoryId, NameFood = p.NameFood, UnitPrice = p.UnitPrice, UrlImage = p.Image };
+                if (!await _categoryRespository.CategoryExit(p.CategoryId))
+                {
+                    return BadRequest("Loại món không được tìm thấy");
+                }
+                _context.Foods.Add(food);
+                _context.SaveChanges();
+
+
+
+                return Ok(new { message = "Thành công", food });
+            }catch (Exception ex)
             {
-                food.UrlImage = "";
+                return StatusCode(500, $"Lỗi: {ex.Message}");
             }
-*/
-            _context.Foods.Add(food);
-            _context.SaveChanges();
-
-          
-
-            return Ok(new { message = "Thành công", food });
         }
 
         [HttpPost]
@@ -182,10 +235,24 @@ namespace OrderRestaurant.Controllers
             {
                 return BadRequest(ModelState);
             }
+            try
+            {
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return BadRequest("Ko co rolename");
+                }
 
-            var createdFood = await _foodRepository.CreateFoodAsync(foodDTO);
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Post, TYPE_FOOD))
+                    return Unauthorized();
 
-            return CreatedAtAction(nameof(GetFoodById), new { id = createdFood.FoodId }, createdFood);
+                var createdFood = await _foodRepository.CreateFoodAsync(foodDTO);
+
+                return CreatedAtAction(nameof(GetFoodById), new { id = createdFood.FoodId }, createdFood);
+            }catch(Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
         }
     
 
@@ -193,13 +260,32 @@ namespace OrderRestaurant.Controllers
         [Route("{id}")]
         public async Task<IActionResult> UpdateFood([FromRoute] int id, [FromBody] UpdateFoodDTO updateFood)
         {
-            var model = await _foodRepository.UpdateFood(id, updateFood);
-            if (model == null)
+            if (!ModelState.IsValid)
             {
-                return BadRequest();
+                return BadRequest(ModelState);
             }
+            try
+            {
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return BadRequest("Ko co rolename");
+                }
 
-            return Ok(model.ToFoodDto());
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Put, TYPE_FOOD))
+                    return Unauthorized();
+
+                var model = await _foodRepository.UpdateFood(id, updateFood);
+                if (model == null)
+                {
+                    return BadRequest();
+                }
+
+                return Ok(model.ToFoodDto());
+            }catch(Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
         }
      
 
@@ -208,12 +294,32 @@ namespace OrderRestaurant.Controllers
         [Route("{id}")]
         public async Task<IActionResult> DeleteFood([FromRoute] int id)
         {
-            var model = await _foodRepository.DeleteFood(id);
-            if(model == null)
+            if (!ModelState.IsValid)
             {
-                return NotFound();
+                return BadRequest(ModelState);
             }
-            return NoContent();
+            try
+            {
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return BadRequest("Ko co rolename");
+                }
+
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Delete, TYPE_FOOD))
+                    return Unauthorized();
+
+                var model = await _foodRepository.DeleteFood(id);
+                if (model == null)
+                {
+                    return NotFound();
+                }
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
         }
     }
 }

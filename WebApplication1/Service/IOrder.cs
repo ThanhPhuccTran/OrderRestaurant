@@ -9,7 +9,7 @@ namespace OrderRestaurant.Service
     public interface IOrder
     {
         Task<List<OrderModel>> GetAllOrders();
-        Task<OrderDetailModel> GetOrderDetails(int orderId);
+        Task<List<OrderDetailModel>> GetOrderDetails(int orderId);
         Task<bool> CreateOrderAsync(CreateCartDTO cartDto);
         Task<bool> DeleteOrderAsync(int orderId);
         Task<bool> DeleteOrderDetailAsync(int orderId, int foodId);

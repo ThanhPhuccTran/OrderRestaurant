@@ -82,7 +82,7 @@ namespace OrderRestaurant.Controllers
         }
         // Thống kê doanh thu từ trước tới giờ theo tháng nhập theo năm
         [HttpGet("Total-Revenue-Month")]
-        public async Task<IActionResult> GetTotalRevenueByMonth(int currentYear)
+        public async Task<IActionResult> GetTotalRevenueByMonth(DateTime startDate, DateTime endDate)
         {
 
             if (!ModelState.IsValid)
@@ -91,7 +91,30 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
-                var totalRevenue = await _statistics.GetTotalRevenueByMonth(currentYear);
+                var totalRevenue = await _statistics.GetTotalRevenueByMonthRange(startDate, endDate);
+                if (totalRevenue == null)
+                {
+                    return BadRequest("Doanh thu hiện không có");
+                }
+                return Ok(totalRevenue);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
+        }
+
+        [HttpGet("Total-Revenue-Date")]
+        public async Task<IActionResult> GetTotalRevenueByDate(DateTime startDate, DateTime endDate)
+        {
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var totalRevenue = await _statistics.GetTotalRevenueByDateRange(startDate, endDate);
                 if (totalRevenue == null)
                 {
                     return BadRequest("Doanh thu hiện không có");
@@ -127,7 +150,7 @@ namespace OrderRestaurant.Controllers
 
         //Thống kê món ăn , sắp xếp theo số lượng mua 
         [HttpGet("Get-Food-Statistics")]
-        public async Task<IActionResult> GetFoodStatistics()
+        public async Task<IActionResult> GetFoodStatistics([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
         {
             if (!ModelState.IsValid)
             {
@@ -135,7 +158,7 @@ namespace OrderRestaurant.Controllers
             }
             try 
             {
-                var model = await _statistics.GetFoodStatistics();
+                var model = await _statistics.GetFoodStatistics(startDate, endDate);
                 if(model == null)
                 {
                     return BadRequest("không thống kê được");
@@ -150,7 +173,7 @@ namespace OrderRestaurant.Controllers
         }
         //món ăn sử dụng nhiều nhất
         [HttpGet("favourite-food")]
-        public async Task<IActionResult> GetFavouriteFood()
+        public async Task<IActionResult> GetFavouriteFood([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
         {
             if (!ModelState.IsValid)
             {
@@ -158,7 +181,7 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
-               var model = await _statistics.GetMostPopularFood();
+               var model = await _statistics.GetMostPopularFood(startDate, endDate);
                 if(model == null)
                 {
                     return BadRequest("Không có món ăn nào ");
@@ -173,7 +196,7 @@ namespace OrderRestaurant.Controllers
 
         //món ăn ít sử dụng  nhất
         [HttpGet("leastpopular-food")]
-        public async Task<IActionResult> GetLeastPopularFood()
+        public async Task<IActionResult> GetLeastPopularFood([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
         {
             if (!ModelState.IsValid)
             {
@@ -181,7 +204,7 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
-                var model = await _statistics.GetLeastPopularFood();
+                var model = await _statistics.GetLeastPopularFood(startDate, endDate);
                 if (model == null)
                 {
                     return BadRequest("Không có món ăn nào ");
@@ -204,13 +227,22 @@ namespace OrderRestaurant.Controllers
                     return BadRequest("Ngày bắt đầu không thể sau ngày kết thúc");
                 }
 
-                var (totalRevenue, leastUsedFood, popularUsedFood) = await _statistics.RevenueByDate(startDate, endDate);
+                var (totalRevenue, leastUsedFood, popularUsedFood, doanhso,donhang,food) = await _statistics.RevenueByDate(startDate, endDate);
+                /*var totalRevenue = result.Item1;
+                var leastUsedFood = result.Item2;
+                var popularUsedFood = result.Item3;
+                var totalRevenueByDate = result.Item4;*/
+              //  var listRevenueByDate = result.Item4;
 
                 return Ok(new
                 {
-                    DoanhSo = totalRevenue,
-                    MonAnSuDungItNhatTrongNgay = leastUsedFood,
-                    MonAnSuDungNhieuNhatTrongNgay = popularUsedFood
+                    TotalRevenue = totalRevenue,
+                    LeastUsedFood = leastUsedFood,
+                    PopularUsedFood = popularUsedFood,
+                    DoanhSo = doanhso,
+                    DonHang = donhang,
+                    Food = food,
+                    
                 });
             }
             catch (Exception ex)
@@ -218,6 +250,9 @@ namespace OrderRestaurant.Controllers
                 return StatusCode(500, "Lỗi không xác định. Vui lòng thử lại sau.");
             }
         }
+
+     
+
 
     }
 }
