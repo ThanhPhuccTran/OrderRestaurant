@@ -34,6 +34,7 @@ namespace WebApplication1
             builder.Services.AddScoped<IConfig, ConfigReponsitory>();
             builder.Services.AddScoped<IStatistics, StatisticsReponsitory>();
             builder.Services.AddScoped<IPermission, PermissionReponsitory>();
+            builder.Services.AddScoped<INotification, NotificationReponsitory>();
 
             builder.Services.AddScoped<ICommon<FoodModel>, FoodReponsitory>();
             builder.Services.AddScoped<ICommon<Table>, TableReponsitory>();

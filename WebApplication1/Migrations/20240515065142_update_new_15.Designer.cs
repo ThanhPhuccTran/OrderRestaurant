@@ -12,8 +12,8 @@ using OrderRestaurant.Data;
 namespace OrderRestaurant.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20240502014022_add_role")]
-    partial class add_role
+    [Migration("20240515065142_update_new_15")]
+    partial class update_new_15
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -93,15 +93,12 @@ namespace OrderRestaurant.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("RolesRoleId")
-                        .HasColumnType("int");
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("EmployeeId");
-
-                    b.HasIndex("RolesRoleId");
 
                     b.ToTable("Employee");
                 });
@@ -161,6 +158,34 @@ namespace OrderRestaurant.Migrations
                     b.HasKey("StatusId");
 
                     b.ToTable("Settings");
+                });
+
+            modelBuilder.Entity("OrderRestaurant.Data.Notification", b =>
+                {
+                    b.Property<int>("NotificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("NotificationId"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsCheck")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("NotificationId");
+
+                    b.ToTable("Notification");
                 });
 
             modelBuilder.Entity("OrderRestaurant.Data.Order", b =>
@@ -237,6 +262,60 @@ namespace OrderRestaurant.Migrations
                     b.ToTable("OrderDetails");
                 });
 
+            modelBuilder.Entity("OrderRestaurant.Data.Permission", b =>
+                {
+                    b.Property<string>("Function")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FunctionTable")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.ToTable("Permission");
+                });
+
+            modelBuilder.Entity("OrderRestaurant.Data.RefreshToken", b =>
+                {
+                    b.Property<Guid>("RefreshTokeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ExpiredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("IssueAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("JwtId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("RefreshTokeId");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("RefreshToken");
+                });
+
             modelBuilder.Entity("OrderRestaurant.Data.Requirements", b =>
                 {
                     b.Property<int>("RequestId")
@@ -268,23 +347,6 @@ namespace OrderRestaurant.Migrations
                     b.ToTable("Requirements");
                 });
 
-            modelBuilder.Entity("OrderRestaurant.Data.Roles", b =>
-                {
-                    b.Property<int>("RoleId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoleId"));
-
-                    b.Property<string>("RoleName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("RoleId");
-
-                    b.ToTable("Roles");
-                });
-
             modelBuilder.Entity("OrderRestaurant.Data.Table", b =>
                 {
                     b.Property<int>("TableId")
@@ -309,13 +371,6 @@ namespace OrderRestaurant.Migrations
                     b.HasKey("TableId");
 
                     b.ToTable("Table");
-                });
-
-            modelBuilder.Entity("OrderRestaurant.Data.Employee", b =>
-                {
-                    b.HasOne("OrderRestaurant.Data.Roles", null)
-                        .WithMany("Employees")
-                        .HasForeignKey("RolesRoleId");
                 });
 
             modelBuilder.Entity("OrderRestaurant.Data.Food", b =>
@@ -369,6 +424,17 @@ namespace OrderRestaurant.Migrations
                     b.Navigation("Order");
                 });
 
+            modelBuilder.Entity("OrderRestaurant.Data.RefreshToken", b =>
+                {
+                    b.HasOne("OrderRestaurant.Data.Employee", "Employees")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employees");
+                });
+
             modelBuilder.Entity("OrderRestaurant.Data.Requirements", b =>
                 {
                     b.HasOne("OrderRestaurant.Data.Table", "Tables")
@@ -403,11 +469,6 @@ namespace OrderRestaurant.Migrations
             modelBuilder.Entity("OrderRestaurant.Data.Order", b =>
                 {
                     b.Navigation("OrderDetails");
-                });
-
-            modelBuilder.Entity("OrderRestaurant.Data.Roles", b =>
-                {
-                    b.Navigation("Employees");
                 });
 
             modelBuilder.Entity("OrderRestaurant.Data.Table", b =>
