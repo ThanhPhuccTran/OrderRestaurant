@@ -8,7 +8,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace OrderRestaurant.Responsitory
 {
-    public class EmployeeReponsitory : IEmployee
+    public class EmployeeReponsitory : IEmployee, ICommon<EmployeeModel>
     {
         private readonly ApplicationDBContext _dbContext;
         public EmployeeReponsitory(ApplicationDBContext context)
@@ -73,6 +73,38 @@ namespace OrderRestaurant.Responsitory
                 .Take(querry.PageSize)
                 .ToListAsync();
             return (totalItems, totalPages, employees);
+        }
+
+        public async Task<(int totalItems, int totalPages, List<EmployeeModel> items)> SearchAndPaginate(QuerryObject querryObject)
+        {
+            var query = _dbContext.Employees.AsQueryable();
+
+            // Áp dụng tìm kiếm nếu có
+            if (!string.IsNullOrWhiteSpace(querryObject.Search))
+            {
+                query = query.Where(f => EF.Functions.Like(f.EmployeeName, $"%{querryObject.Search}%"));
+            }
+
+            // Tính toán số trang và lấy dữ liệu phân trang
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalItems / querryObject.PageSize);
+            var skipNumber = (querryObject.PageNumber - 1) * querryObject.PageSize;
+            var items = await query.Skip(skipNumber).Take(querryObject.PageSize).ToListAsync();
+            var foods = await query
+                .Select(f => new EmployeeModel
+                {
+                   EmployeeId = f.EmployeeId,
+                   EmployeeName= f.EmployeeName,
+                   Image =f.Image,
+                   Phone = f.Phone,
+                   RoleName = f.RoleName,
+                   Email = f.Email,
+                   Password = f.Password
+                })
+                .Skip(skipNumber)
+                .Take(querryObject.PageSize)
+                .ToListAsync();
+            return (totalItems, totalPages, foods);
         }
 
         public async Task<Employee> UpdateAdmin(int id, string rolename )

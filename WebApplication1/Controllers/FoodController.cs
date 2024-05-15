@@ -37,25 +37,18 @@ namespace OrderRestaurant.Controllers
 
         //https://localhost:7014/api/Food/search
         //Phân trang và tìm kiếm , tìm kiếm theo giá asc desc , tìm theo category
-        [HttpGet("search")]
-        public async Task<IActionResult> Search([FromQuery] QuerryFood querry, string search = "")
+        [HttpGet("get-filter")]
+        public async Task<IActionResult> Search([FromQuery] QuerryFood querry)
         {
-           
+            var filter = await _foodRepository.GetFilterFood(querry);
 
-            var (totalItems, totalPages, foods) = await _foodRepository.GetSearchFood(querry, search);
-
-            if(totalItems == 0)
+            if(filter == null)
             {
                 return NotFound("Không tìm thấy kết quả");
             }
-            var response = new
-            {
-                TotalItems = totalItems, // Số lượng hiện có 
-                TotalPages = totalPages, // Tổng trang
-                Foods = foods  // list danh sách
-            };
-
-            return Ok(response);
+            
+           
+            return Ok(filter);
         }
 
 
@@ -69,15 +62,7 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
-                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-                if (roleName == null)
-                {
-                    return BadRequest("Ko co rolename");
-                }
-
-                if (!_permissionRepository.CheckPermission(roleName, Constants.Get, TYPE_FOOD))
-                    return Unauthorized();
-
+                
                 var model = _context.Foods.Select(s => new FoodModel
                 {
                     FoodId = s.FoodId,
@@ -140,8 +125,6 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
-               
-
                 var food = await _context.Foods
                     .Where(s => s.FoodId == foodid)
                     .Select(s => new FoodModel

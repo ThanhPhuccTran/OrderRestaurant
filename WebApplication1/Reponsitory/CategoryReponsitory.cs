@@ -2,12 +2,13 @@
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.CategoryDTO;
 using OrderRestaurant.Helpers;
+using OrderRestaurant.Model;
 using OrderRestaurant.Service;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace OrderRestaurant.Responsitory
 {
-    public class CategoryReponsitory : ICategory
+    public class CategoryReponsitory : ICategory,ICommon<CategoryModel>
     {
         private readonly ApplicationDBContext _context;
         public CategoryReponsitory(ApplicationDBContext context)
@@ -84,6 +85,34 @@ namespace OrderRestaurant.Responsitory
             categoryupdate.Description = updateCategoryDTO.Description;
             await _context.SaveChangesAsync();
             return categoryupdate;
+        }
+
+        public async Task<(int totalItems, int totalPages, List<CategoryModel> items)> SearchAndPaginate(QuerryObject querryObject)
+        {
+            var query = _context.Categoies.AsQueryable();
+
+            // Áp dụng tìm kiếm nếu có
+            if (!string.IsNullOrWhiteSpace(querryObject.Search))
+            {
+                query = query.Where(f => EF.Functions.Like(f.CategoryName, $"%{querryObject.Search}%"));
+            }
+
+            // Tính toán số trang và lấy dữ liệu phân trang
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalItems / querryObject.PageSize);
+            var skipNumber = (querryObject.PageNumber - 1) * querryObject.PageSize;
+            var items = await query.Skip(skipNumber).Take(querryObject.PageSize).ToListAsync();
+            var foods = await query
+                .Select(f => new CategoryModel
+                {
+                    CategoryId = f.CategoryId,
+                    CategoryName = f.CategoryName,
+                    Description = f.Description
+                })
+                .Skip(skipNumber)
+                .Take(querryObject.PageSize)
+                .ToListAsync();
+            return (totalItems, totalPages, foods);
         }
     }
 }

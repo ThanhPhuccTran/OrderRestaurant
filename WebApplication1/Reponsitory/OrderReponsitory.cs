@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.CartDTO;
@@ -9,6 +10,7 @@ using OrderRestaurant.DTO.OrderDetailsDTO;
 using OrderRestaurant.DTO.OrderDTO;
 using OrderRestaurant.DTO.TableDTO;
 using OrderRestaurant.Helpers;
+using OrderRestaurant.Hubs;
 using OrderRestaurant.Model;
 using OrderRestaurant.Service;
 using System;
@@ -18,9 +20,11 @@ namespace OrderRestaurant.Responsitory
     public class OrderReponsitory : IOrder, ICommon<OrderModel>
     {
         private readonly ApplicationDBContext _dbContext;
-        public OrderReponsitory(ApplicationDBContext dbContext)
+      /*  private readonly IHubContext<NotificationHub> _hubContext;*/
+        public OrderReponsitory(ApplicationDBContext dbContext/*, IHubContext<NotificationHub> hubContext*/)
         {
             _dbContext = dbContext;
+           /* _hubContext = hubContext;*/
         }
 
         public async Task<bool> CreateOrderAsync(CreateCartDTO cartDto)
@@ -57,6 +61,17 @@ namespace OrderRestaurant.Responsitory
                     };
                     _dbContext.OrderDetails.Add(orderDetails);
                 }
+
+                //Notifi
+                var notifi = new Notification
+                {
+                    Title = "Có đơn mới",
+                    Content = "",
+                    Type = "Order",
+                    IsCheck = false,
+                };
+                _dbContext.Notifications.Add(notifi);
+               // await _hubContext.Clients.All.SendAsync("ReceiveOrderNotification", notifi);
                 await _dbContext.SaveChangesAsync();
                 return true; // Thành công
             }
@@ -281,6 +296,7 @@ namespace OrderRestaurant.Responsitory
         public async Task<(int totalItems, int totalPages, List<OrderModel> items)> SearchAndPaginate(QuerryObject querryObject)
         {
             var query = _dbContext.Orders
+                                  .OrderByDescending(s => s.CreationTime)
                                   .Include(o => o.Customers)
                                   .Include(o => o.Tables)
                                   .Include(o => o.Employees)
@@ -289,7 +305,7 @@ namespace OrderRestaurant.Responsitory
             // Áp dụng tìm kiếm nếu có
             if (!string.IsNullOrWhiteSpace(querryObject.Search))
             {
-                query = query.Where(f => EF.Functions.Like(f.Employees.EmployeeName, $"%{querryObject.Search}%"));
+                query = query.Where(f => EF.Functions.Like(f.Tables.TableName, $"%{querryObject.Search}%"));
             }
 
             // Tính toán số trang và lấy dữ liệu phân trang

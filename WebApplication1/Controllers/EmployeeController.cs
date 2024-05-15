@@ -16,32 +16,46 @@ namespace OrderRestaurant.Controllers
     {
         private readonly ApplicationDBContext _context;
         private readonly IEmployee _employee;
-        public EmployeeController(ApplicationDBContext context, IEmployee employee)
+        private readonly ICommon<EmployeeModel> _common;
+        public EmployeeController(ApplicationDBContext context, IEmployee employee, ICommon<EmployeeModel> common)
         {
             _context = context;
             _employee = employee;
-
+            _common = common;
         }
-        [HttpGet("search")]
-        public async Task<IActionResult> Search([FromQuery] QuerryObject querry , string search = "")
+        [HttpGet("get-search-page")]
+        public async Task<IActionResult> SearchAndPaginate([FromQuery] QuerryObject parameters)
         {
-            if(querry.PageNumber <=0 || querry.PageSize <= 0)
+            if (!ModelState.IsValid)
             {
-                return BadRequest("Không hợp lệ");
+                return BadRequest(ModelState);
             }
-            var (totalItems, totalPages, employee) = await _employee.GetSearchEmployee(querry,search);
-            if (totalItems == 0)
+            try
             {
-                return NotFound("Không tìm thấy kết quả");
+
+
+                var (totalItems, totalPages, employee) = await _common.SearchAndPaginate(parameters);
+
+                if (totalItems == 0)
+                {
+                    return NotFound("Không tìm thấy kết quả");
+                }
+
+                var response = new
+                {
+                    TotalItems = totalItems,
+                    TotalPages = totalPages,
+                    Employee = employee
+                };
+
+                return Ok(response);
             }
-            var response = new
+            catch (Exception ex)
             {
-                TotalItems = totalItems,
-                TotalPages = totalPages,
-                Employees = employee
-            };
-            return Ok(response);
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
         }
+
         [HttpPost("postEmployee")]
         public async Task<IActionResult> CreateEmployeeImage([FromBody] CreateEmployeeDTO p)
         {
