@@ -69,6 +69,7 @@ namespace OrderRestaurant.Responsitory
                     Content = "",
                     Type = "Order",
                     IsCheck = false,
+                    CreatedAt = DateTime.Now,
                 };
                 _dbContext.Notifications.Add(notifi);
                // await _hubContext.Clients.All.SendAsync("ReceiveOrderNotification", notifi);
