@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.CategoryDTO;
 using OrderRestaurant.Helpers;
+using OrderRestaurant.Model;
 using OrderRestaurant.Service;
+using static Azure.Core.HttpHeader;
 
 namespace OrderRestaurant.Controllers
 {
@@ -15,36 +17,50 @@ namespace OrderRestaurant.Controllers
     {
         private readonly ApplicationDBContext _context;
         private readonly ICategory _category;
-        public CategoryController(ApplicationDBContext context, ICategory category)
+        private readonly ICommon<CategoryModel> _common;
+        public CategoryController(ApplicationDBContext context, ICategory category, ICommon<CategoryModel> common)
         {
             _context = context;
             _category = category;
+            _common = common;
         }
 
-        [HttpGet("search")]
-        public async Task<IActionResult> Search([FromQuery] QuerryObject querry, string search = "")
+        [HttpGet("get-search-page")]
+        public async Task<IActionResult> SearchAndPaginate([FromQuery] QuerryObject parameters)
         {
-            if (querry.PageNumber <= 0 || querry.PageSize <= 0)
+            if (!ModelState.IsValid)
             {
-                return BadRequest("Không hợp lệ");
+                return BadRequest(ModelState);
             }
-            var (totalItems, totalPages, category) = await _category.GetSearch(querry, search);
-            if (totalItems == 0)
+            try
             {
-                return NotFound("Không tìm thấy kết quả");
+
+
+                var (totalItems, totalPages, category) = await _common.SearchAndPaginate(parameters);
+
+                if (totalItems == 0)
+                {
+                    return NotFound("Không tìm thấy kết quả");
+                }
+
+                var response = new
+                {
+                    TotalItems = totalItems,
+                    TotalPages = totalPages,
+                    Categorys = category
+                };
+
+                return Ok(response);
             }
-            var response = new
+            catch (Exception ex)
             {
-                TotalItems = totalItems,
-                TotalPages = totalPages,
-                Category = category
-            };
-            return Ok(response);
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
         }
 
 
         [HttpGet]
-        [Authorize(Roles = "employee, admin")]
+        
         public async Task<IActionResult> GetCategoryAll()
         {
             if (!ModelState.IsValid)
@@ -57,7 +73,7 @@ namespace OrderRestaurant.Controllers
         }
         [HttpGet]
         [Route("{id:int}")]
-        [Authorize(Roles = "employee, admin")]
+        
         public async Task<IActionResult> GetCategoryById([FromRoute] int id)
         {
             if (!ModelState.IsValid)
@@ -73,7 +89,7 @@ namespace OrderRestaurant.Controllers
         }
         [HttpPut]
         [Route("{id:int}")]
-        [Authorize(Roles = "admin")]
+       
         public async Task<IActionResult> UpdateCategory([FromRoute] int id, [FromBody] UpdateCategoryDTO updateCategory)
         {
             var model = await _category.UpdateCategory(id, updateCategory);

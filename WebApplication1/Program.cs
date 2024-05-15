@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using OrderRestaurant.Data;
+using OrderRestaurant.Hubs;
 using OrderRestaurant.Model;
 using OrderRestaurant.Reponsitory;
 using OrderRestaurant.Responsitory;
@@ -37,6 +38,7 @@ namespace WebApplication1
             builder.Services.AddScoped<ICommon<FoodModel>, FoodReponsitory>();
             builder.Services.AddScoped<ICommon<Table>, TableReponsitory>();
             builder.Services.AddScoped<ICommon<OrderModel>, OrderReponsitory>();
+            builder.Services.AddScoped<ICommon<CategoryModel>, CategoryReponsitory>();
 
             var configuration = builder.Configuration;
             builder.Services.AddDbContext<ApplicationDBContext>(options =>
@@ -65,6 +67,22 @@ namespace WebApplication1
                     ValidateAudience = false,
                     ClockSkew = TimeSpan.Zero
                 };
+                /*x.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken)
+                            && path.StartsWithSegments("/notificationHub"))
+                        {
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+
+                    }
+                };*/
+
             });
 
 
@@ -77,7 +95,7 @@ namespace WebApplication1
                 options.Cookie.HttpOnly = true; // Đảm bảo cookie chỉ được truy cập thông qua HTTP
                 options.Cookie.IsEssential = true; // Cookie là bắt buộc để ứng dụng hoạt động đúng
             });
-
+            /* builder.Services.AddSignalR();*/
             //dinh nghia ra nhung cai dia chi
             /*builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));*/
 
@@ -118,7 +136,7 @@ namespace WebApplication1
                 Path.Combine(builder.Environment.ContentRootPath, "wwwroot")),
                 RequestPath = "/wwwroot"
             });
-           
+
             app.UseHttpsRedirection();
 
 
@@ -132,9 +150,15 @@ namespace WebApplication1
             app.UseAuthentication();
 
             app.UseAuthorization();
-           
+
 
             app.MapControllers();
+            /*  app.MapHub<NotificationHub>("/notificationHub");*/
+            /*  app.UseEndpoints(endpoints =>
+              {
+                  endpoints.MapControllers();
+                  endpoints.MapHub<NotificationHub>("/notificationHub");
+              });*/
 
             app.Run();
         }
