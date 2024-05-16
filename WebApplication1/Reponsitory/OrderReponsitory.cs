@@ -61,12 +61,17 @@ namespace OrderRestaurant.Responsitory
                     };
                     _dbContext.OrderDetails.Add(orderDetails);
                 }
+                var table = await _dbContext.Tables.FindAsync(cartDto.TableId);
+                if (table == null)
+                {
+                    return false;
+                }    
 
                 //Notifi
                 var notifi = new Notification
                 {
                     Title = "Có đơn mới",
-                    Content = "",
+                    Content = $"{table.TableName}",
                     Type = "Order",
                     IsCheck = false,
                     CreatedAt = DateTime.Now,

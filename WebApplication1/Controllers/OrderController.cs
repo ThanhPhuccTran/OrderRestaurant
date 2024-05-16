@@ -14,8 +14,10 @@ using OrderRestaurant.DTO.OrderDTO;
 using OrderRestaurant.DTO.TableDTO;
 using OrderRestaurant.Helpers;
 using OrderRestaurant.Model;
+using OrderRestaurant.Reponsitory;
 using OrderRestaurant.Service;
 using System.Globalization;
+using System.Security.Claims;
 using static Azure.Core.HttpHeader;
 
 namespace OrderRestaurant.Controllers
@@ -27,11 +29,15 @@ namespace OrderRestaurant.Controllers
         private readonly IOrder _orderRepository;
         private readonly ApplicationDBContext _context;
         private readonly ICommon<OrderModel> _common;
-        public OrderController(ApplicationDBContext context, IOrder orderRepository, ICommon<OrderModel> common)
+        private readonly IPermission _permissionRepository;
+        private const string TYPE_Order = "Order";
+        private const string TYPE_OrderDetail = "OrderDetail";
+        public OrderController(ApplicationDBContext context, IOrder orderRepository, ICommon<OrderModel> common, IPermission permissionRepository)
         {
             _orderRepository = orderRepository;
             _context = context;
             _common = common;
+            _permissionRepository = permissionRepository;
         }
         [HttpGet("get-search-page")]
         public async Task<IActionResult> SearchAndPaginate([FromQuery] QuerryObject parameters)
@@ -128,15 +134,29 @@ namespace OrderRestaurant.Controllers
             {
                 return BadRequest(ModelState);
             }
+            try
+            {
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return BadRequest("Ko co rolename");
+                }
 
-            var result = await _orderRepository.DeleteOrderAsync(id);
-            if (result)
-            {
-                return Ok("Xóa thành công");
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Delete, TYPE_Order))
+                    return Unauthorized();
+                var result = await _orderRepository.DeleteOrderAsync(id);
+                if (result)
+                {
+                    return Ok("Xóa thành công");
+                }
+                else
+                {
+                    return NotFound("Không tìm thấy mã Order hoặc đã xảy ra lỗi khi xóa");
+                }
             }
-            else
+            catch(Exception ex)
             {
-                return NotFound("Không tìm thấy mã Order hoặc đã xảy ra lỗi khi xóa");
+                return StatusCode(500, $"Lỗi: {ex.Message}");
             }
         }
         [HttpDelete("DeleteOrderDetail/{orderId}/{foodId}")]
@@ -148,6 +168,14 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return BadRequest("Ko co rolename");
+                }
+
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Delete, TYPE_OrderDetail))
+                    return Unauthorized();
                 var result = await _orderRepository.DeleteOrderDetailAsync(orderId, foodId);
                 if (result)
                 {
@@ -173,6 +201,14 @@ namespace OrderRestaurant.Controllers
 
             try
             {
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return BadRequest("Ko co rolename");
+                }
+
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Put, TYPE_OrderDetail))
+                    return Unauthorized();
                 var result = await _orderRepository.UpdateOrderDetailAsync(orderId, foodId, orderDetailDto);
                 if (result)
                 {

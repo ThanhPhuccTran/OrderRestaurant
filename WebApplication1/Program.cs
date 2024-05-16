@@ -40,6 +40,7 @@ namespace WebApplication1
             builder.Services.AddScoped<ICommon<Table>, TableReponsitory>();
             builder.Services.AddScoped<ICommon<OrderModel>, OrderReponsitory>();
             builder.Services.AddScoped<ICommon<CategoryModel>, CategoryReponsitory>();
+            builder.Services.AddScoped<ICommon<EmployeeModel>, EmployeeReponsitory>();
 
             var configuration = builder.Configuration;
             builder.Services.AddDbContext<ApplicationDBContext>(options =>

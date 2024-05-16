@@ -70,7 +70,7 @@ namespace OrderRestaurant.Controllers
                     UnitPrice = s.UnitPrice,
                     UrlImage = s.UrlImage,
                     CategoryId = s.CategoryId,
-                    Category = _context.Categoies.Where(a => a.CategoryId == s.CategoryId).FirstOrDefault(),
+                    Category = _context.Categoies.Where(a => a.CategoryId == s.CategoryId).FirstOrDefault()??new Category(),
 
                 }).ToList();
 
@@ -134,7 +134,7 @@ namespace OrderRestaurant.Controllers
                         UnitPrice = s.UnitPrice,
                         UrlImage = s.UrlImage,
                         CategoryId = s.CategoryId,
-                        Category = _context.Categoies.FirstOrDefault(a => a.CategoryId == s.CategoryId)
+                        Category = _context.Categoies.FirstOrDefault(a => a.CategoryId == s.CategoryId) ?? new Category()
                     })
                     .FirstOrDefaultAsync();
 
