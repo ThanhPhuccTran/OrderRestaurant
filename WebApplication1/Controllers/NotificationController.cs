@@ -96,5 +96,52 @@ namespace OrderRestaurant.Controllers
 
             return Ok(notificationObjects);
         }
+        [HttpGet("20-time")]
+        public async Task<ActionResult<List<object>>> Get20TimeNotifications()
+        {
+            var notifications = await _notification.Get20Notifications();
+            var notificationObjects = new List<object>();
+
+            foreach (var notification in notifications)
+            {
+                TimeSpan timeSinceNotification = (TimeSpan)(DateTime.Now - notification.CreatedAt);
+                string timeSinceNotificationString = "";
+
+                if (timeSinceNotification.TotalDays >= 1)
+                {
+                    timeSinceNotificationString = $"{(int)timeSinceNotification.TotalDays} ngày trước";
+                }
+                else if (timeSinceNotification.TotalHours >= 1)
+                {
+                    timeSinceNotificationString = $"{(int)timeSinceNotification.TotalHours} giờ trước";
+                }
+                else if (timeSinceNotification.TotalMinutes >= 1)
+                {
+                    timeSinceNotificationString = $"{(int)timeSinceNotification.TotalMinutes} phút trước";
+                }
+                else if (timeSinceNotification.TotalSeconds >= 1)
+                {
+                    timeSinceNotificationString = $"{(int)timeSinceNotification.TotalSeconds} giây trước";
+                }
+                else
+                {
+                    timeSinceNotificationString = "Ngay bây giờ";
+                }
+
+                var notificationObject = new
+                {
+                    NotificationId = notification.NotificationId,
+                    Title = notification.Title,
+                    Content = notification.Content,
+                    Type = notification.Type,
+                    IsCheck = notification.IsCheck,
+                    TimeSinceCreation = timeSinceNotificationString
+                };
+
+                notificationObjects.Add(notificationObject);
+            }
+
+            return Ok(notificationObjects);
+        }
     }
 }

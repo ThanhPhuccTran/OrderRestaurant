@@ -143,7 +143,17 @@ namespace OrderRestaurant.Controllers
                     Title = requirement.Title,
                     Code = Constants.REQUEST_INIT, 
                 };
-               _context.Requests.Add(model);
+                //Notifi
+                var notifi = new Notification
+                {
+                    Title = "Có yêu cầu mới",
+                    Content = "",
+                    Type = "Requirements",
+                    IsCheck = false,
+                    CreatedAt = DateTime.Now,
+                };
+                _context.Notifications.Add(notifi);
+                _context.Requests.Add(model);
                 await _context.SaveChangesAsync();
                 return Ok("Yêu cầu thành công");
             }catch(Exception ex)
