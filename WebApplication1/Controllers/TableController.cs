@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.TableDTO;
 using OrderRestaurant.Helpers;
+using OrderRestaurant.Model;
 using OrderRestaurant.Service;
+using System.Security.Claims;
 
 namespace OrderRestaurant.Controllers
 {
@@ -15,11 +17,14 @@ namespace OrderRestaurant.Controllers
         private readonly ApplicationDBContext _context;
         private readonly ITable _table;
         private readonly ICommon<Table> _common;
-        public TableController(ApplicationDBContext context , ITable table , ICommon<Table> common)
+        private readonly IPermission _permissionRepository;
+        private const string TYPE_Table = "Table";
+        public TableController(ApplicationDBContext context , ITable table , ICommon<Table> common, IPermission permissionRepository)
         {
             _context = context;
             _table = table;
             _common = common;
+            _permissionRepository = permissionRepository;
         }
 
         
@@ -80,60 +85,117 @@ namespace OrderRestaurant.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateTable([FromBody] CreateTableDTO? createTable)
         {
-            var model = createTable.ToTableFromCreate();
-            if(model == null)
+            if (!ModelState.IsValid)
             {
-                return BadRequest("Bắt buộc bạn phải nhập ảnh");
+                return BadRequest(ModelState);
             }
-            await _table.CreateTable(model);
-            return CreatedAtAction(nameof(GetTableById),new {id = model.TableId},model.ToTableDto());
+            try
+            {
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return BadRequest("Ko co rolename");
+                }
+
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Post, TYPE_Table))
+                    return Unauthorized();
+                var model = createTable.ToTableFromCreate();
+                if (model == null)
+                {
+                    return BadRequest("Bắt buộc bạn phải nhập ảnh");
+                }
+                await _table.CreateTable(model);
+                return CreatedAtAction(nameof(GetTableById), new { id = model.TableId }, model.ToTableDto());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
         }
 
         [HttpPut]
         [Route("{id:int}")]
         public async Task<IActionResult> UpdateTable([FromRoute] int id, [FromBody] UpdateTableDTO updateTableDTO)
         {
-            bool check = await _table.TableExit(id);
-            if (!check)
-            {
-                return NotFound("Không tìm thấy bàn");
-            }
-
-            // Kiểm tra xem thuộc tính Name được gửi và không rỗng
-            if (updateTableDTO.TableName != null && updateTableDTO.TableName.Trim() == "")
-            {
-                return BadRequest("Tên không được để trống");
-            }
-            if(updateTableDTO.QR_id == null)
-            {
-                return BadRequest("Mã QR không được để trống");
-            }
-
-            var model = await _table.UpdateTable(id, updateTableDTO);
-
-            if (model == null)
+            if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
+            try
+            {
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return BadRequest("Ko co rolename");
+                }
 
-            return Ok(model.ToTableDto());
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Put, TYPE_Table))
+                    return Unauthorized();
+
+                bool check = await _table.TableExit(id);
+                if (!check)
+                {
+                    return NotFound("Không tìm thấy bàn");
+                }
+
+                // Kiểm tra xem thuộc tính Name được gửi và không rỗng
+                if (updateTableDTO.TableName != null && updateTableDTO.TableName.Trim() == "")
+                {
+                    return BadRequest("Tên không được để trống");
+                }
+                if (updateTableDTO.QR_id == null)
+                {
+                    return BadRequest("Mã QR không được để trống");
+                }
+
+                var model = await _table.UpdateTable(id, updateTableDTO);
+
+                if (model == null)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                return Ok(model.ToTableDto());
+            }catch(Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
         }
 
         [HttpDelete]
         [Route("{tableid}")]
         public async Task<IActionResult> DeleteTable([FromRoute] int tableid)
         {
-            bool check = await _table.TableExit(tableid);
-            if (!check)
+            if (!ModelState.IsValid)
             {
-                return NotFound("Không tìm thấy bàn");
+                return BadRequest(ModelState);
             }
-            var model = await _table.DeleteTable(tableid);
-            if(model == null)
+            try
             {
-                return NotFound();
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return BadRequest("Ko co rolename");
+                }
+
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Delete, TYPE_Table))
+                    return Unauthorized();
+                bool check = await _table.TableExit(tableid);
+                if (!check)
+                {
+                    return NotFound("Không tìm thấy bàn");
+                }
+                var model = await _table.DeleteTable(tableid);
+                if (model == null)
+                {
+                    return NotFound("Không tìm thấy bàn");
+                }
+                return NoContent();
             }
-            return NoContent();
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
         }
     }
 }

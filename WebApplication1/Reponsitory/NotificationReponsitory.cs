@@ -19,7 +19,11 @@ namespace OrderRestaurant.Reponsitory
 
         public async Task<List<Notification>> GetNotifications()
         {
-            return await _context.Notifications.ToListAsync();
+            return await _context.Notifications.OrderByDescending(c=>c.CreatedAt).ToListAsync();
+        }
+        public async Task<List<Notification>> Get20Notifications()
+        {
+            return await _context.Notifications.Take(20).OrderByDescending(c => c.CreatedAt).ToListAsync();
         }
 
         public async Task MarkAllNotificationsAsRead()
