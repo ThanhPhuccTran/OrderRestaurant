@@ -96,10 +96,10 @@ namespace OrderRestaurant.Controllers
 
             return Ok(notificationObjects);
         }
-        [HttpGet("20-time")]
-        public async Task<ActionResult<List<object>>> Get20TimeNotifications()
+        [HttpGet("10-time")]
+        public async Task<ActionResult<List<object>>> Get10TimeNotifications()
         {
-            var notifications = await _notification.Get20Notifications();
+            var notifications = await _notification.Get10Notifications();
             var notificationObjects = new List<object>();
 
             foreach (var notification in notifications)

@@ -147,7 +147,7 @@ namespace OrderRestaurant.Controllers
                 var notifi = new Notification
                 {
                     Title = "Có yêu cầu mới",
-                    Content = "",
+                    Content = $"{model.Title}",
                     Type = "Requirements",
                     IsCheck = false,
                     CreatedAt = DateTime.Now,
