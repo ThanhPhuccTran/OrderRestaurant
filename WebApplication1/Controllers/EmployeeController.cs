@@ -144,6 +144,7 @@ namespace OrderRestaurant.Controllers
                 return StatusCode(500, $"Lỗi: {ex.Message}");
             }
         }
+
         [HttpGet("{id}")]
         public async Task<ActionResult<Employee>> GetEmployee(int id)
         {
