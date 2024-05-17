@@ -81,7 +81,28 @@ namespace OrderRestaurant.Controllers
                 return StatusCode(500, $"Lỗi: {ex.Message}");
             }
         }
+        [HttpGet("get-food-by-category")]
+        public async Task<IActionResult> GetFoodByCategory(int categoryId)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
+            try
+            {
+                var foodByCategory = await _foodRepository.GetFoodByCategory(categoryId);
+                if(foodByCategory == null)
+                {
+                    return NotFound("Không tìm thấy đồ ăn");
+                }    
+                return Ok(foodByCategory);
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
+        }
        
         [HttpGet("get-search-page")]
         public async Task<IActionResult> SearchAndPaginate([FromQuery] QuerryObject parameters)

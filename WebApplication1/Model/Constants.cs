@@ -53,5 +53,11 @@
         public const string Put = "put";
         public const string Delete = "delete";
 
+        //TYPE
+        public const string TYPE_REQUEST = "Requirements";
+        public const string TYPE_ORDER = "Order";
+        public const string TYPE_TABLE = "Table";
+
+
     }
 }
