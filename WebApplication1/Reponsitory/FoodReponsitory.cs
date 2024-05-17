@@ -199,5 +199,30 @@ namespace OrderRestaurant.Responsitory
                 .ToListAsync();
             return (totalItems, totalPages, foods);
         }
+
+        public async Task<List<FoodModel>> GetFoodByCategory(int categoryid)
+        {
+            var food = await _context.Foods.Where(a=> a.CategoryId == categoryid).ToListAsync();
+
+            var query =  food.Select(f => new FoodModel
+            {
+                FoodId = f.FoodId,
+                NameFood = f.NameFood,
+                UnitPrice = f.UnitPrice,
+                UrlImage = f.UrlImage,
+                CategoryId = f.CategoryId,
+                Category = _context.Categoies
+                                   .Where(a => a.CategoryId == f.CategoryId)
+                                   .Select(o => new Category
+                                   {
+                                       CategoryId = o.CategoryId,
+                                       CategoryName = o.CategoryName,
+                                       Description = o.Description,
+                                   })
+                                   .FirstOrDefault(),
+            }).ToList();
+            return query;
+
+        }
     }
 }

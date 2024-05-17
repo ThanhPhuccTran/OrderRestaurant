@@ -1,11 +1,14 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.ConfigDTO;
 using OrderRestaurant.DTO.RequirementDTO;
 using OrderRestaurant.DTO.TableDTO;
+using OrderRestaurant.Helpers;
 using OrderRestaurant.Model;
+using OrderRestaurant.Service;
 
 namespace OrderRestaurant.Controllers
 {
@@ -14,9 +17,13 @@ namespace OrderRestaurant.Controllers
     public class RequirementController : ControllerBase
     {
         private readonly ApplicationDBContext _context;
-        public RequirementController(ApplicationDBContext context)
+        private readonly IRequest _request;
+        private readonly ICommon<RequirementModel> _common;
+        public RequirementController(ApplicationDBContext context,IRequest request, ICommon<RequirementModel> common)
         {
             _context = context;
+            _request = request;
+            _common = common;
         }
 
         [HttpGet("get-request-all")]
@@ -28,38 +35,11 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
-                var model = await _context.Requests
-                    .OrderByDescending(s => s.RequestTime)
-                    .Select(s => new RequirementModel
-                    {
-                        RequestId = s.RequestId,
-                        TableId = s.TableId,
-                        RequestTime = s.RequestTime,
-                        Title = s.Title,
-                        RequestNote = s.RequestNote,
-                        Code = s.Code,
-                        Tables = _context.Tables.Where(a => a.TableId == s.TableId)
-                            .Select(o => new TablesDTO
-                            {
-                                TableId = o.TableId,
-                                TableName = o.TableName,
-                                Note = o.Note,
-                                QR_id = o.QR_id,
-                                Code = o.Code
-                            })
-                            .FirstOrDefault()??new TablesDTO(),
-                        Statuss = _context.Statuss
-                            .Where(a => a.Code == s.Code && a.Type == "Order")
-                            .Select(o => new ManageStatusDTO
-                            {
-                                StatusId = o.StatusId,
-                                Code = o.Code,
-                                Type = o.Type,
-                                Value = o.Value,
-                                Description = o.Description,
-                            })
-                            .FirstOrDefault(),
-                    }).ToListAsync();
+                var model = await _request.GetAllRequestsAsync();
+                if(model == null)
+                {
+                    return NotFound("Không tìm thấy");
+                }
 
                 return Ok(model);
             }
@@ -78,40 +58,10 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
-                var model = await _context.Requests.Select
-                    (
-                        s => new RequirementModel
-                        {
-                            RequestId = s.RequestId,
-                            TableId = s.TableId,
-                            RequestTime = s.RequestTime,
-                            Title = s.Title,
-                            RequestNote = s.RequestNote,
-                            Code = s.Code,
-                            Tables = _context.Tables.Where(a => a.TableId == s.TableId)
-                                                    .Select(o => new TablesDTO
-                                                    {
-                                                        TableId = o.TableId,
-                                                        TableName = o.TableName,
-                                                        Note = o.Note,
-                                                        QR_id = o.QR_id,
-                                                        Code = o.Code
-                                                    }).FirstOrDefault() ?? new TablesDTO(),
-                            Statuss = _context.Statuss
-                                                .Where(a => a.Code == s.Code && a.Type == "Order")
-                                                .Select(o => new ManageStatusDTO
-                                                {
-                                                    StatusId = o.StatusId,
-                                                    Code = o.Code,
-                                                    Type = o.Type,
-                                                    Value = o.Value,
-                                                    Description = o.Description,
-                                                }).FirstOrDefault(),
-
-                         }).Where(a=>a.RequestId == id).FirstOrDefaultAsync();
+                var model = await _request.GetRequestByIdAsync(id);
             if(model == null)
             {
-                return NotFound();
+                return NotFound("Không tìm thấy");
             }
                 return Ok(model);
             }
@@ -130,31 +80,7 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
-                var table = await _context.Tables.FindAsync(requirement.TableId);
-                if (table == null)
-                {
-                    return NotFound("Không tìm thấy bàn");
-                }
-                var model = new Requirements
-                {
-                    TableId = requirement.TableId,
-                    RequestTime = DateTime.Now,
-                    RequestNote = requirement.RequestNote,
-                    Title = requirement.Title,
-                    Code = Constants.REQUEST_INIT, 
-                };
-                //Notifi
-                var notifi = new Notification
-                {
-                    Title = "Có yêu cầu mới",
-                    Content = $"{model.Title}",
-                    Type = "Requirements",
-                    IsCheck = false,
-                    CreatedAt = DateTime.Now,
-                };
-                _context.Notifications.Add(notifi);
-                _context.Requests.Add(model);
-                await _context.SaveChangesAsync();
+                var model = await _request.CreateRequestAsync(requirement);
                 return Ok("Yêu cầu thành công");
             }catch(Exception ex)
             {
@@ -166,39 +92,7 @@ namespace OrderRestaurant.Controllers
         {
             try
             {
-                var request = await _context.Requests.FindAsync(requestId);
-                if (request == null)
-                {
-                    return NotFound("Không tìm thấy yêu cầu");
-                }
-                if (request.Code != Constants.REQUEST_INIT)
-                {
-                    return BadRequest("Trạng thái không phải là yêu cầu mới");
-                }
-
-                request.Code = Constants.REQUEST_COMPLETE; 
-                var requestDTO = new RequestDTO 
-                { 
-                    RequestId = request.RequestId,
-                    TableId = request.TableId,
-                    RequestTime = request.RequestTime,
-                    Code = request.Code,
-                    Title = request.Title,
-                    RequestNote = request.RequestNote,
-                    Tables = _context.Tables.Where(a => a.TableId == request.TableId)
-                            .Select(o => new TablesDTO
-                            {
-                                TableId = o.TableId,
-                                TableName = o.TableName,
-                                Note = o.Note,
-                                QR_id = o.QR_id,
-                                Code = o.Code
-                            })
-                            .FirstOrDefault() ?? new TablesDTO(),
-
-                };
-                _context.Requests.Update(request);
-                await _context.SaveChangesAsync();
+                var request = await _request.CompleteRequestAsync(requestId);
                 return Ok("Yêu cầu đã hoàn thành");
             }
             catch (Exception ex)
@@ -212,38 +106,11 @@ namespace OrderRestaurant.Controllers
         {
             try
             {
-                var request = await _context.Requests.FindAsync(requestId);
-                if (request == null)
+               var model = await _request.RefuseRequestAsync(requestId);
+                if(!model)
                 {
-                    return NotFound("Không tìm thấy yêu cầu");
+                    return NotFound("Không tìm thấy");
                 }
-                if (request.Code != Constants.REQUEST_INIT)
-                {
-                    return BadRequest("Trạng thái không phải là yêu cầu mới");
-                }
-
-                request.Code = Constants.REQUEST_REFUSE;
-                var requestDTO = new RequestDTO
-                {
-                    RequestId = request.RequestId,
-                    TableId = request.TableId,
-                    RequestTime = request.RequestTime,
-                    Code = request.Code,
-                    Title = request.Title,
-                    RequestNote = request.RequestNote,
-                    Tables = _context.Tables.Where(a => a.TableId == request.TableId)
-                            .Select(o => new TablesDTO
-                            {
-                                TableId = o.TableId,
-                                TableName = o.TableName,
-                                Note = o.Note,
-                                QR_id = o.QR_id,
-                                Code = o.Code
-                            })
-                            .FirstOrDefault() ?? new TablesDTO(),
-
-                };
-                await _context.SaveChangesAsync();
 
                 return Ok("Yêu cầu đã bị từ chối");
             }
@@ -263,13 +130,12 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
-                var model = await _context.Requests.FindAsync(id);
-                if (model == null)
+                var model = await _request.DeleteRequestAsync(id);
+                if (!model)
                 {
                     return NotFound("Không tìm thấy yêu cầu");
                 }
-                _context.Requests.Remove(model);
-                await _context.SaveChangesAsync();
+               
                 return Ok("Xóa thành công");
             }
             catch(Exception ex)
@@ -288,24 +154,11 @@ namespace OrderRestaurant.Controllers
 
             try
             {
-                var request = await _context.Requests.FindAsync(requestId);
-                if (request == null)
+                var request = await _request.UpdateRequestAsync(requestId,updatedRequirement);
+                if (!request)
                 {
                     return NotFound("Không tìm thấy yêu cầu");
                 }
-
-                // Kiểm tra xem yêu cầu có trong trạng thái cho phép sửa hay không
-                if (request.Code != Constants.REQUEST_INIT)
-                {
-                    return BadRequest("Không thể sửa yêu cầu không phải là yêu cầu mới");
-                }
-
-                // Cập nhật thông tin yêu cầu
-                request.Title = updatedRequirement.Title;
-                request.RequestNote = updatedRequirement.RequestNote;
-
-                // Lưu các thay đổi vào cơ sở dữ liệu
-                await _context.SaveChangesAsync();
 
                 return Ok("Thông tin yêu cầu đã được cập nhật thành công");
             }
@@ -316,58 +169,24 @@ namespace OrderRestaurant.Controllers
         }
 
 
-        [HttpGet("search-request")]
-        public async Task<IActionResult> SearchRequest(string search="", int page = 1, int pageSize = 10)
+        [HttpGet("get-search-page")]
+        public async Task<IActionResult> SearchAndPaginate([FromQuery] QuerryObject parameters)
         {
-            if (!ModelState.IsValid)
+            var (totalItems, totalPages, request) = await _common.SearchAndPaginate(parameters);
+
+            if (totalItems == 0)
             {
-                return BadRequest(ModelState);
+                return NotFound("Không tìm thấy kết quả");
             }
 
-            try
+            var response = new
             {
-                var requests = await _context.Requests
-                    .Where(r => EF.Functions.Like(r.Title, $"%{search}%"))
-                    .OrderByDescending(s => s.RequestTime)
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .Select(s => new RequirementModel
-                    {
-                        RequestId = s.RequestId,
-                        TableId = s.TableId,
-                        RequestTime = s.RequestTime,
-                        Title = s.Title,
-                        RequestNote = s.RequestNote,
-                        Code = s.Code,
-                        Tables = _context.Tables.Where(a => a.TableId == s.TableId)
-                            .Select(o => new TablesDTO
-                            {
-                                TableId = o.TableId,
-                                TableName = o.TableName,
-                                Note = o.Note,
-                                QR_id = o.QR_id,
-                                Code = o.Code
-                            })
-                            .FirstOrDefault() ?? new TablesDTO(),
-                        Statuss = _context.Statuss
-                            .Where(a => a.Code == s.Code && a.Type == "Order")
-                            .Select(o => new ManageStatusDTO
-                            {
-                                StatusId = o.StatusId,
-                                Code = o.Code,
-                                Type = o.Type,
-                                Value = o.Value,
-                                Description = o.Description,
-                            })
-                            .FirstOrDefault(),
-                    }).ToListAsync();
+                TotalItems = totalItems,
+                TotalPages = totalPages,
+                Request = request
+            };
 
-                return Ok(requests);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Bị lỗi: {ex.Message}");
-            }
+            return Ok(response);
         }
 
 

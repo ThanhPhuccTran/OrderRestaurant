@@ -39,7 +39,14 @@ namespace OrderRestaurant.Controllers
             try
             {
 
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return BadRequest("Ko co rolename");
+                }
 
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Get, TYPE_Category))
+                    return Unauthorized();
                 var (totalItems, totalPages, category) = await _common.SearchAndPaginate(parameters);
 
                 if (totalItems == 0)
@@ -67,13 +74,30 @@ namespace OrderRestaurant.Controllers
         
         public async Task<IActionResult> GetCategoryAll()
         {
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var model = await _category.GetCategoryFoods();
-            var list = model.Select(hh => hh.ToCategoryDto());
-            return Ok(list);
+            try
+            {
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return BadRequest("Ko co rolename");
+                }
+
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Get, TYPE_Category))
+                    return Unauthorized();
+
+                var model = await _category.GetCategoryFoods();
+                var list = model.Select(hh => hh.ToCategoryDto());
+                return Ok(list);
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
         }
         [HttpGet]
         [Route("{id:int}")]

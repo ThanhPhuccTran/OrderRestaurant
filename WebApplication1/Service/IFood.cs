@@ -10,6 +10,7 @@ namespace OrderRestaurant.Service
         Task<List<Food>> GetFilterFood(QuerryFood querry);
         Task<Food> CreateFoodAsync(CreateFoodDTO food);
         Task<FoodModel> GetFoodByIdAsync(int id);
+        Task<List<FoodModel>> GetFoodByCategory(int categoryid);
         Task<List<Food>> GetAllFoods();
         Task<Food>UpdateFood (int id, UpdateFoodDTO updateFoodDTO);
         Task<Food?> DeleteFood(int id);

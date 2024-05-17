@@ -35,12 +35,14 @@ namespace WebApplication1
             builder.Services.AddScoped<IStatistics, StatisticsReponsitory>();
             builder.Services.AddScoped<IPermission, PermissionReponsitory>();
             builder.Services.AddScoped<INotification, NotificationReponsitory>();
+            builder.Services.AddScoped<IRequest, RequestReponsitory>();
 
             builder.Services.AddScoped<ICommon<FoodModel>, FoodReponsitory>();
             builder.Services.AddScoped<ICommon<Table>, TableReponsitory>();
             builder.Services.AddScoped<ICommon<OrderModel>, OrderReponsitory>();
             builder.Services.AddScoped<ICommon<CategoryModel>, CategoryReponsitory>();
             builder.Services.AddScoped<ICommon<EmployeeModel>, EmployeeReponsitory>();
+            builder.Services.AddScoped<ICommon<RequirementModel>, RequestReponsitory>();
 
             var configuration = builder.Configuration;
             builder.Services.AddDbContext<ApplicationDBContext>(options =>

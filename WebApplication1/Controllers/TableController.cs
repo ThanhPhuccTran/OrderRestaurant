@@ -29,36 +29,136 @@ namespace OrderRestaurant.Controllers
 
         
 
-        [HttpGet("get-search-page")]
+        [HttpGet("employee/get-search-page")]
         public async Task<IActionResult> SearchAndPaginate([FromQuery] QuerryObject parameters)
         {
-            var (totalItems, totalPages, tables) = await _common.SearchAndPaginate(parameters);
-
-            if (totalItems == 0)
+            if (!ModelState.IsValid)
             {
-                return NotFound("Không tìm thấy kết quả");
+                return BadRequest(ModelState);
             }
-
-            var response = new
+            try
             {
-                TotalItems = totalItems,
-                TotalPages = totalPages,
-                Tabkes = tables
-            };
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return BadRequest("Ko co rolename");
+                }
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Get, TYPE_Table))
+                    return Unauthorized();
+                var (totalItems, totalPages, tables) = await _common.SearchAndPaginate(parameters);
 
-            return Ok(response);
+                if (totalItems == 0)
+                {
+                    return NotFound("Không tìm thấy kết quả");
+                }
+
+                var response = new
+                {
+                    TotalItems = totalItems,
+                    TotalPages = totalPages,
+                    Tabkes = tables
+                };
+
+                return Ok(response);
+            }catch(Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
+        }
+        [HttpGet("admin/get-search-page")]
+        public async Task<IActionResult> SearchAndPaginateAdmin([FromQuery] QuerryObject parameters)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return BadRequest("Ko co rolename");
+                }
+
+                if (roleName != "admin")
+                {
+                    return Unauthorized("Chỉ admin mới có quyền truy cập vào phương thức này.");
+                }
+                var (totalItems, totalPages, tables) = await _common.SearchAndPaginate(parameters);
+
+                if (totalItems == 0)
+                {
+                    return NotFound("Không tìm thấy kết quả");
+                }
+
+                var response = new
+                {
+                    TotalItems = totalItems,
+                    TotalPages = totalPages,
+                    Tabkes = tables
+                };
+
+                return Ok(response);
+            }catch(Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
         }
 
-        [HttpGet]
+        [HttpGet("employee/get-table")]
         public async Task<IActionResult> GetTableAll()
         {
             if(!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var model = await _table.GetAllTable();
-            var list = model.Select(hh => hh.ToTableDto());
-            return Ok(list);
+            try
+            {
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return BadRequest("Ko co rolename");
+                }
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Get, TYPE_Table))
+                    return Unauthorized();
+
+                var model = await _table.GetAllTable();
+                var list = model.Select(hh => hh.ToTableDto());
+                return Ok(list);
+            }catch(Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
+        }
+
+        [HttpGet("admin/get-table")]
+        public async Task<IActionResult> GetAdminTableAll()
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return BadRequest("Ko co rolename");
+                }
+
+                if (roleName != "admin")
+                {
+                    return Unauthorized("Chỉ admin mới có quyền truy cập vào phương thức này.");
+                }
+
+                var model = await _table.GetAllTable();
+                var list = model.Select(hh => hh.ToTableDto());
+                return Ok(list);
+
+            }catch(Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
         }
 
         [HttpGet]
@@ -97,8 +197,10 @@ namespace OrderRestaurant.Controllers
                     return BadRequest("Ko co rolename");
                 }
 
-                if (!_permissionRepository.CheckPermission(roleName, Constants.Post, TYPE_Table))
-                    return Unauthorized();
+                if (roleName != "admin")
+                {
+                    return Unauthorized("Chỉ admin mới có quyền truy cập vào phương thức này.");
+                }
                 var model = createTable.ToTableFromCreate();
                 if (model == null)
                 {
@@ -129,9 +231,10 @@ namespace OrderRestaurant.Controllers
                     return BadRequest("Ko co rolename");
                 }
 
-                if (!_permissionRepository.CheckPermission(roleName, Constants.Put, TYPE_Table))
-                    return Unauthorized();
-
+                if (roleName != "admin")
+                {
+                    return Unauthorized("Chỉ admin mới có quyền truy cập vào phương thức này.");
+                }
                 bool check = await _table.TableExit(id);
                 if (!check)
                 {
@@ -178,8 +281,10 @@ namespace OrderRestaurant.Controllers
                     return BadRequest("Ko co rolename");
                 }
 
-                if (!_permissionRepository.CheckPermission(roleName, Constants.Delete, TYPE_Table))
-                    return Unauthorized();
+                if (roleName != "admin")
+                {
+                    return Unauthorized("Chỉ admin mới có quyền truy cập vào phương thức này.");
+                }
                 bool check = await _table.TableExit(tableid);
                 if (!check)
                 {
