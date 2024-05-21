@@ -314,11 +314,100 @@ namespace OrderRestaurant.Responsitory
                 query = query.Where(f => EF.Functions.Like(f.Tables.TableName, $"%{querryObject.Search}%"));
             }
 
+
             // Tính toán số trang và lấy dữ liệu phân trang
             var totalItems = await query.CountAsync();
             var totalPages = (int)Math.Ceiling((double)totalItems / querryObject.PageSize);
             var skipNumber = (querryObject.PageNumber - 1) * querryObject.PageSize;
             var items = await query.Skip(skipNumber).Take(querryObject.PageSize).ToListAsync();
+            var orderModels = items.Select(s => new OrderModel
+            {
+                OrderId = s.OrderId,
+                EmployeeId = s.EmployeeId,
+                TableId = s.TableId,
+                CreationTime = s.CreationTime,
+                ReceivingTime = s.ReceivingTime,
+                PaymentTime = s.PaymentTime,
+                Pay = s.Pay,
+                Note = s.Note,
+                Code = s.Code,
+                Employees = _dbContext.Employees
+                                   .Where(a => a.EmployeeId == s.EmployeeId)
+                                   .Select(o => new EmployeesDTO
+                                   {
+                                       EmployeeId = o.EmployeeId,
+                                       EmployeeName = o.EmployeeName,
+                                       Email = o.Email,
+                                       Password = o.Password,
+                                       Phone = o.Phone,
+                                       Image = o.Image
+                                   })
+                                   .FirstOrDefault(),
+                Statuss = _dbContext.Statuss
+                                   .Where(a => a.Code == s.Code && a.Type == "Order")
+                                   .Select(o => new ManageStatusDTO
+                                   {
+                                       StatusId = o.StatusId,
+                                       Code = o.Code,
+                                       Type = o.Type,
+                                       Value = o.Value,
+                                       Description = o.Description,
+                                   })
+                                   .FirstOrDefault(),
+                Tables = _dbContext.Tables.Where(a => a.TableId == s.TableId)
+                                   .Select(o => new TablesDTO
+                                   {
+                                       TableId = o.TableId,
+                                       TableName = o.TableName,
+                                       Note = o.Note,
+                                       QR_id = o.QR_id,
+                                       Code = o.Code
+                                   })
+                                   .FirstOrDefault(),
+            }).ToList();
+            return (totalItems, totalPages, orderModels);
+        }
+
+        public async Task<(int totalItems, int totalPages, List<OrderModel> items)> SearchAndPaginate(QuerryOrder querryOrder)
+        {
+            var query = _dbContext.Orders
+                                  .OrderByDescending(s => s.CreationTime)
+                                  .Include(o => o.Customers)
+                                  .Include(o => o.Tables)
+                                  .Include(o => o.Employees)
+                                  .AsQueryable();
+
+            // Áp dụng tìm kiếm nếu có
+            if (!string.IsNullOrWhiteSpace(querryOrder.Search))
+            {
+                query = query.Where(f => EF.Functions.Like(f.Tables.TableName, $"%{querryOrder.Search}%"));
+            }
+            if (querryOrder.Code.HasValue)
+            {
+                query = query.Where(o => o.Code == querryOrder.Code.Value);
+            }
+            if (querryOrder.fromTime.HasValue && querryOrder.toTime.HasValue)
+            {
+                query = query.Where(o => o.CreationTime != null &&
+                                         o.CreationTime.Value.Date >= querryOrder.fromTime.Value.Date &&
+                                         o.CreationTime.Value.Date <= querryOrder.toTime.Value.Date);
+            }
+            else if (querryOrder.fromTime.HasValue)
+            {
+                query = query.Where(o => o.CreationTime != null &&
+                                         o.CreationTime.Value.Date >= querryOrder.fromTime.Value.Date);
+            }
+            else if (querryOrder.toTime.HasValue)
+            {
+                query = query.Where(o => o.CreationTime != null &&
+                                         o.CreationTime.Value.Date <= querryOrder.toTime.Value.Date);
+            }
+
+            // Tính toán số trang và lấy dữ liệu phân trang
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalItems / querryOrder.PageSize);
+            var skipNumber = (querryOrder.PageNumber - 1) * querryOrder.PageSize;
+            var items = await query.Skip(skipNumber).Take(querryOrder.PageSize).ToListAsync();
             var orderModels = items.Select(s => new OrderModel
             {
                 OrderId = s.OrderId,
