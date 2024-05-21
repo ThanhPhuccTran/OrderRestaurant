@@ -186,7 +186,7 @@ namespace OrderRestaurant.Controllers
                 var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
                 if (roleName == null)
                 {
-                    return BadRequest("Ko co rolename");
+                    return NotFound("Ko co rolename");
                 }
 
                 if (!_permissionRepository.CheckPermission(roleName, Constants.Post, TYPE_FOOD))
@@ -221,7 +221,7 @@ namespace OrderRestaurant.Controllers
                 var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
                 if (roleName == null)
                 {
-                    return BadRequest("Ko co rolename");
+                    return NotFound("Ko co rolename");
                 }
 
                 if (!_permissionRepository.CheckPermission(roleName, Constants.Post, TYPE_FOOD))
@@ -250,7 +250,7 @@ namespace OrderRestaurant.Controllers
                 var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
                 if (roleName == null)
                 {
-                    return BadRequest("Ko co rolename");
+                    return NotFound("Ko co rolename");
                 }
 
                 if (!_permissionRepository.CheckPermission(roleName, Constants.Put, TYPE_FOOD))
@@ -284,7 +284,7 @@ namespace OrderRestaurant.Controllers
                 var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
                 if (roleName == null)
                 {
-                    return BadRequest("Ko co rolename");
+                    return NotFound("Ko co rolename");
                 }
 
                 if (!_permissionRepository.CheckPermission(roleName, Constants.Delete, TYPE_FOOD))
