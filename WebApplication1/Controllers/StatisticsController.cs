@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrderRestaurant.Data;
 using OrderRestaurant.Model;
+using OrderRestaurant.Reponsitory;
 using OrderRestaurant.Service;
+using System.Security.Claims;
 
 namespace OrderRestaurant.Controllers
 {
@@ -14,11 +16,13 @@ namespace OrderRestaurant.Controllers
         
         private readonly ApplicationDBContext _context;
         private readonly IStatistics _statistics;
-       
-        public StatisticsController(ApplicationDBContext context, IStatistics statistics)
+        private readonly IPermission _permissionRepository;
+        private const string TYPE_Statistics = "Statistics";
+        public StatisticsController(ApplicationDBContext context, IStatistics statistics, IPermission permissionRepository)
         {
             _statistics = statistics;
             _context = context;
+            _permissionRepository = permissionRepository;
            
         }
         //Thống kê doanh số theo ngày,tháng năm 
@@ -222,6 +226,15 @@ namespace OrderRestaurant.Controllers
         {
             try
             {
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return NotFound("Ko co rolename");
+                }
+
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Delete, TYPE_Statistics))
+                    return Unauthorized();
+
                 if (startDate > endDate)
                 {
                     return BadRequest("Ngày bắt đầu không thể sau ngày kết thúc");

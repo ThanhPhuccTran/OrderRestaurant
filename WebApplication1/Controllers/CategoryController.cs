@@ -39,14 +39,7 @@ namespace OrderRestaurant.Controllers
             try
             {
 
-                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-                if (roleName == null)
-                {
-                    return BadRequest("Ko co rolename");
-                }
-
-                if (!_permissionRepository.CheckPermission(roleName, Constants.Get, TYPE_Category))
-                    return Unauthorized();
+              
                 var (totalItems, totalPages, category) = await _common.SearchAndPaginate(parameters);
 
                 if (totalItems == 0)
@@ -81,14 +74,7 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
-                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-                if (roleName == null)
-                {
-                    return BadRequest("Ko co rolename");
-                }
-
-                if (!_permissionRepository.CheckPermission(roleName, Constants.Get, TYPE_Category))
-                    return Unauthorized();
+               
 
                 var model = await _category.GetCategoryFoods();
                 var list = model.Select(hh => hh.ToCategoryDto());
@@ -129,7 +115,7 @@ namespace OrderRestaurant.Controllers
                 var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
                 if (roleName == null)
                 {
-                    return BadRequest("Ko co rolename");
+                    return NotFound("Ko co rolename");
                 }
 
                 if (!_permissionRepository.CheckPermission(roleName, Constants.Put, TYPE_Category))
@@ -159,7 +145,7 @@ namespace OrderRestaurant.Controllers
                 var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
                 if (roleName == null)
                 {
-                    return BadRequest("Ko co rolename");
+                    return NotFound("Ko co rolename");
                 }
 
                 if (!_permissionRepository.CheckPermission(roleName, Constants.Post, TYPE_Category))
@@ -186,7 +172,7 @@ namespace OrderRestaurant.Controllers
                 var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
                 if (roleName == null)
                 {
-                    return BadRequest("Ko co rolename");
+                    return NotFound("Ko co rolename");
                 }
 
                 if (!_permissionRepository.CheckPermission(roleName, Constants.Delete, TYPE_Category))
