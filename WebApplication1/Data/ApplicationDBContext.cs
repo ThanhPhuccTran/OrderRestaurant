@@ -37,38 +37,42 @@ namespace OrderRestaurant.Data
                 .HasForeignKey(ba => ba.FoodId);
 
             modelBuilder.Entity<Order>()
-        .HasOne(o => o.Tables)
-        .WithMany(t => t.Orders)
-        .HasForeignKey(o => o.TableId)
-        .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(o => o.Tables)
+                .WithMany(t => t.Orders)
+                .HasForeignKey(o => o.TableId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Food>()
+               .HasOne(f => f.Category)
+               .WithMany(c => c.Foods)
+               .HasForeignKey(f => f.CategoryId)
+               .OnDelete(DeleteBehavior.Cascade);
 
 
+            /*    modelBuilder.Entity<Cart>()
+                .HasOne(c => c.TableCart)
+                .WithMany(t => t.Carts)
+                .HasForeignKey(c => c.TableId)
+                .OnDelete(DeleteBehavior.NoAction); // Hoặc sử dụng DeleteBehavior.Restrict nếu bạn muốn
 
-        /*    modelBuilder.Entity<Cart>()
-            .HasOne(c => c.TableCart)
-            .WithMany(t => t.Carts)
-            .HasForeignKey(c => c.TableId)
-            .OnDelete(DeleteBehavior.NoAction); // Hoặc sử dụng DeleteBehavior.Restrict nếu bạn muốn
+                modelBuilder.Entity<Cart>()
+                    .HasOne(c => c.FoodCart)
+                    .WithMany(f => f.Carts)
+                    .HasForeignKey(c => c.FoodId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
-            modelBuilder.Entity<Cart>()
-                .HasOne(c => c.FoodCart)
-                .WithMany(f => f.Carts)
-                .HasForeignKey(c => c.FoodId)
-                .OnDelete(DeleteBehavior.NoAction);
+                modelBuilder.Entity<Cart>()
+                    .HasOne(c => c.EmployeeCart)
+                    .WithMany(e => e.Carts)
+                    .HasForeignKey(c => c.EmployeeId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
-            modelBuilder.Entity<Cart>()
-                .HasOne(c => c.EmployeeCart)
-                .WithMany(e => e.Carts)
-                .HasForeignKey(c => c.EmployeeId)
-                .OnDelete(DeleteBehavior.NoAction);
+                modelBuilder.Entity<Cart>()
+                    .HasOne(c => c.ManageStatusCart)
+                    .WithMany(e => e.Carts)
+                    .HasForeignKey(c => c.StatusId)
+                    .OnDelete(DeleteBehavior.NoAction);
+    */
 
-            modelBuilder.Entity<Cart>()
-                .HasOne(c => c.ManageStatusCart)
-                .WithMany(e => e.Carts)
-                .HasForeignKey(c => c.StatusId)
-                .OnDelete(DeleteBehavior.NoAction);
-*/
-           
         }
     }
 }
