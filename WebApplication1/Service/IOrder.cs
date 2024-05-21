@@ -2,6 +2,7 @@
 using OrderRestaurant.Data;
 using OrderRestaurant.DTO.CartDTO;
 using OrderRestaurant.DTO.OrderDetailsDTO;
+using OrderRestaurant.Helpers;
 using OrderRestaurant.Model;
 
 namespace OrderRestaurant.Service
@@ -17,6 +18,8 @@ namespace OrderRestaurant.Service
         Task UpdateAsync(Order order);
         Task<List<Order>> FindOrdersByTable(int tableId, int code);
         Task<Order> FindOrderById(int orderid);
+
+        Task<(int totalItems, int totalPages, List<OrderModel> items)> SearchAndPaginate(QuerryOrder querryOrder);
 
     }
 }

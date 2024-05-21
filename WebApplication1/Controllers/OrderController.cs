@@ -59,6 +59,26 @@ namespace OrderRestaurant.Controllers
             return Ok(response);
         }
 
+        [HttpGet("get-search")]
+        public async Task<IActionResult> SearchAndPaginate([FromQuery] QuerryOrder parameters)
+        {
+            var (totalItems, totalPages, orders) = await _orderRepository.SearchAndPaginate(parameters);
+
+            if (totalItems == 0)
+            {
+                return NotFound("Không tìm thấy kết quả");
+            }
+
+            var response = new
+            {
+                TotalItems = totalItems,
+                TotalPages = totalPages,
+                Orders = orders
+            };
+
+            return Ok(response);
+        }
+
         [HttpGet("get-order-all")]
         public async Task<IActionResult> GetAll()
         {
