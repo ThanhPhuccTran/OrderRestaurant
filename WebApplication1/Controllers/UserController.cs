@@ -79,7 +79,7 @@ namespace OrderRestaurant.Controllers
                    
                 }),
                 //Time hết hạn 
-                Expires = DateTime.UtcNow.AddSeconds(30),
+                Expires = DateTime.UtcNow.AddHours(3),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(sercetKeyBytes), SecurityAlgorithms.HmacSha512Signature)
 
             };
@@ -96,7 +96,7 @@ namespace OrderRestaurant.Controllers
                 IsUsed = false,
                 IsRevoked = false,
                 IssueAt = DateTime.UtcNow,
-                ExpiredAt = DateTime.UtcNow.AddSeconds(31),
+                ExpiredAt = DateTime.UtcNow.AddDays(2),
                 EmployeeId = nhanVien.EmployeeId,
 
             };

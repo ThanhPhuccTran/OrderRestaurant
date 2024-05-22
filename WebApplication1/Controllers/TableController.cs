@@ -161,8 +161,8 @@ namespace OrderRestaurant.Controllers
                 return StatusCode(500, $"Lỗi: {ex.Message}");
             }
         }
-        [HttpPost("post-booking/{tableid}")]
-        public async Task<IActionResult>PostBooking(int tableid)
+        [HttpPost("post-booking")]
+        public async Task<IActionResult> PostBooking([FromBody] PostBooking postBooking)
         {
             if (!ModelState.IsValid)
             {
@@ -170,7 +170,7 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
-                var model = await _table.PostBooking(tableid);
+                var model = await _table.PostBooking(postBooking.Tableid, postBooking.Note);
                 if (model == null)
                 {
                     return NotFound("Bàn không được tìm thấy");

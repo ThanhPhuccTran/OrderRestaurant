@@ -104,7 +104,7 @@ namespace OrderRestaurant.Responsitory
             return await _dbContext.Tables.FindAsync(tableId);
         }
 
-        public async Task<Table> PostBooking(int id)
+        public async Task<Table> PostBooking(int id,string note)
         {
             var query = await _dbContext.Tables.FindAsync(id);
             if(query == null)
@@ -116,6 +116,7 @@ namespace OrderRestaurant.Responsitory
                 throw new ArgumentException("Trạng thái bàn không phải là bàn trống");
             }
             query.Code = Constants.TABLE_BOOKING;
+            query.Note = note;
             await _dbContext.SaveChangesAsync();
             return query;
         }
