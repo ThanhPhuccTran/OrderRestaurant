@@ -1,4 +1,5 @@
 ﻿using OrderRestaurant.DTO.RequirementDTO;
+using OrderRestaurant.Helpers;
 using OrderRestaurant.Model;
 
 namespace OrderRestaurant.Service
@@ -12,5 +13,6 @@ namespace OrderRestaurant.Service
         Task<bool> RefuseRequestAsync(int requestId);
         Task<bool> DeleteRequestAsync(int id);
         Task<bool> UpdateRequestAsync(int requestId, UpdatedRequirementDTO updatedRequirement);
+        Task<(int totalItems, int totalPages, List<RequirementModel> items)> SearchAndPaginate(QuerryOrder querryOrder);
     }
 }

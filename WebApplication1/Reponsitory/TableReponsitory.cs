@@ -16,6 +16,39 @@ namespace OrderRestaurant.Responsitory
             _dbContext = dbContext;
 
         }
+
+        public async Task<Table> CancelBooking(int id)
+        {
+            var query = await _dbContext.Tables.FindAsync(id);
+            if (query == null)
+            {
+                return null;
+            }
+            if (query.Code != Constants.TABLE_BOOKING)
+            {
+                throw new ArgumentException("Trạng thái bàn không phải là bàn đặt");
+            }
+            query.Code = Constants.TABLE_EMPTY;
+            await _dbContext.SaveChangesAsync();
+            return query;
+        }
+
+        public async Task<Table> CheckInBooking(int id)
+        {
+            var query = await _dbContext.Tables.FindAsync(id);
+            if (query == null)
+            {
+                return null;
+            }
+            if (query.Code != Constants.TABLE_BOOKING)
+            {
+                throw new ArgumentException("Trạng thái bàn không phải là bàn đặt");
+            }
+            query.Code = Constants.TABLE_GUESTS;
+            await _dbContext.SaveChangesAsync();
+            return query;
+        }
+
         public async Task<Table> CreateTable(Table table)
         {
             await _dbContext.AddAsync(table);
@@ -69,6 +102,22 @@ namespace OrderRestaurant.Responsitory
         public async Task<Table?> GetTableById(int tableId)
         {
             return await _dbContext.Tables.FindAsync(tableId);
+        }
+
+        public async Task<Table> PostBooking(int id)
+        {
+            var query = await _dbContext.Tables.FindAsync(id);
+            if(query == null)
+            {
+                return null;
+            }
+            if(query.Code != Constants.TABLE_EMPTY)
+            {
+                throw new ArgumentException("Trạng thái bàn không phải là bàn trống");
+            }
+            query.Code = Constants.TABLE_BOOKING;
+            await _dbContext.SaveChangesAsync();
+            return query;
         }
 
         public async Task<(int totalItems, int totalPages, List<Table> items)> SearchAndPaginate(QuerryObject querryObject)

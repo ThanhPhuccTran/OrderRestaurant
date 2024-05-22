@@ -19,7 +19,7 @@ namespace OrderRestaurant.Controllers
         private readonly ICommon<Table> _common;
         private readonly IPermission _permissionRepository;
         private const string TYPE_Table = "Table";
-        public TableController(ApplicationDBContext context , ITable table , ICommon<Table> common, IPermission permissionRepository)
+        public TableController(ApplicationDBContext context, ITable table, ICommon<Table> common, IPermission permissionRepository)
         {
             _context = context;
             _table = table;
@@ -27,7 +27,7 @@ namespace OrderRestaurant.Controllers
             _permissionRepository = permissionRepository;
         }
 
-        
+
 
         [HttpGet("get-search-page")]
         public async Task<IActionResult> SearchAndPaginate([FromQuery] QuerryObject parameters)
@@ -52,7 +52,7 @@ namespace OrderRestaurant.Controllers
         [HttpGet]
         public async Task<IActionResult> GetTableAll()
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
@@ -75,9 +75,9 @@ namespace OrderRestaurant.Controllers
                 return BadRequest(ModelState);
             }
             var model = await _table.GetTableById(id);
-            if(model == null)
+            if (model == null)
             {
-                return BadRequest(ModelState);  
+                return BadRequest(ModelState);
             }
             return Ok(model);
         }
@@ -156,12 +156,94 @@ namespace OrderRestaurant.Controllers
                 }
 
                 return Ok(model.ToTableDto());
-            }catch(Exception ex)
+            } catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
+        }
+        [HttpPost("post-booking/{tableid}")]
+        public async Task<IActionResult>PostBooking(int tableid)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var model = await _table.PostBooking(tableid);
+                if (model == null)
+                {
+                    return NotFound("Bàn không được tìm thấy");
+                }
+                return Ok("Đặt bàn thành công");
+
+            }
+            catch (ArgumentException ex)
+            {
+               
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
             {
                 return StatusCode(500, $"Lỗi: {ex.Message}");
             }
         }
 
+        [HttpPost("cancel-booking/{tableid}")]
+        public async Task<IActionResult> CancelBooking(int tableid)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var model = await _table.CancelBooking(tableid);
+                if (model == null)
+                {
+                    return NotFound("Bàn không được tìm thấy");
+                }
+                return Ok("Hủy đặt bàn thành công");
+
+            }
+            catch (ArgumentException ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
+        }
+
+        [HttpPost("checkIn-booking")]
+        public async Task<IActionResult> CheckInBooking(int tableid)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var model = await _table.CheckInBooking(tableid);
+                if (model == null)
+                {
+                    return NotFound("Bàn không được tìm thấy");
+                }
+                return Ok("Khách hàng đã tới bàn");
+
+            }
+            catch (ArgumentException ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
+        }
         [HttpDelete]
         [Route("{tableid}")]
         public async Task<IActionResult> DeleteTable([FromRoute] int tableid)

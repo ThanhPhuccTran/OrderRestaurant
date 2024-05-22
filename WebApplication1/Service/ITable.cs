@@ -14,5 +14,8 @@ namespace OrderRestaurant.Service
         Task<Table> UpdateTable(int id,UpdateTableDTO tableDTO);
         Task<Table> DeleteTable(int id);
         Task<bool> TableExit(int id);
+        Task<Table> PostBooking(int  id);
+        Task<Table> CancelBooking(int id);
+        Task<Table> CheckInBooking(int id);
     }
 }
