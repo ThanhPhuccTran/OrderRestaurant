@@ -29,6 +29,7 @@ namespace OrderRestaurant.Responsitory
                 throw new ArgumentException("Trạng thái bàn không phải là bàn đặt");
             }
             query.Code = Constants.TABLE_EMPTY;
+            query.Note = "";
             await _dbContext.SaveChangesAsync();
             return query;
         }
@@ -45,6 +46,7 @@ namespace OrderRestaurant.Responsitory
                 throw new ArgumentException("Trạng thái bàn không phải là bàn đặt");
             }
             query.Code = Constants.TABLE_GUESTS;
+            query.Note = "";
             await _dbContext.SaveChangesAsync();
             return query;
         }
