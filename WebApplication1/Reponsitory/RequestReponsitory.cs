@@ -262,6 +262,67 @@ namespace OrderRestaurant.Reponsitory
             return (totalItems, totalPages, requestModel);
         }
 
+        public async Task<(int totalItems, int totalPages, List<RequirementModel> items)> SearchAndPaginate(QuerryOrder querryOrder)
+        {
+            var query = _context.Requests
+                                  .OrderByDescending(s => s.RequestTime)
+                                  .Include(o => o.Tables)
+                                  .AsQueryable();
+
+            // Áp dụng tìm kiếm nếu có
+            if (!string.IsNullOrWhiteSpace(querryOrder.Search))
+            {
+                query = query.Where(f => EF.Functions.Like(f.Tables.TableName, $"%{querryOrder.Search}%"));
+            }
+            if (querryOrder.Code.HasValue)
+            {
+                query = query.Where(o => o.Code == querryOrder.Code.Value);
+            }
+            if (querryOrder.fromTime.HasValue && querryOrder.toTime.HasValue)
+            {
+                query = query.Where(o => o.RequestTime != null &&
+                                         o.RequestTime.Value.Date >= querryOrder.fromTime.Value.Date &&
+                                         o.RequestTime.Value.Date <= querryOrder.toTime.Value.Date);
+            }
+            else if (querryOrder.fromTime.HasValue)
+            {
+                query = query.Where(o => o.RequestTime != null &&
+                                         o.RequestTime.Value.Date >= querryOrder.fromTime.Value.Date);
+            }
+            else if (querryOrder.toTime.HasValue)
+            {
+                query = query.Where(o => o.RequestTime != null &&
+                                         o.RequestTime.Value.Date <= querryOrder.toTime.Value.Date);
+            }
+
+            // Tính toán số trang và lấy dữ liệu phân trang
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalItems / querryOrder.PageSize);
+            var skipNumber = (querryOrder.PageNumber - 1) * querryOrder.PageSize;
+            var items = await query.Skip(skipNumber).Take(querryOrder.PageSize).ToListAsync();
+            var requestModel = items.Select(s => new RequirementModel
+            {
+                RequestId = s.RequestId,
+                TableId = s.TableId,
+                RequestTime = s.RequestTime,
+                Title = s.Title,
+                RequestNote = s.RequestNote,
+                Code = s.Code,
+                Tables = _context.Tables.Where(a => a.TableId == s.TableId)
+                                        .Select(o => new TablesDTO
+                                        {
+                                            TableId = o.TableId,
+                                            TableName = o.TableName,
+                                            Note = o.Note,
+                                            QR_id = o.QR_id,
+                                            Code = o.Code
+
+                                        }).FirstOrDefault() ?? new TablesDTO(),
+
+            }).ToList();
+            return (totalItems, totalPages, requestModel);
+        }
+
         public async Task<bool> UpdateRequestAsync(int requestId, UpdatedRequirementDTO updatedRequirement)
         {
             try

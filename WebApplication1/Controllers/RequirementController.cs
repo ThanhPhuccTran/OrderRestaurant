@@ -8,6 +8,7 @@ using OrderRestaurant.DTO.RequirementDTO;
 using OrderRestaurant.DTO.TableDTO;
 using OrderRestaurant.Helpers;
 using OrderRestaurant.Model;
+using OrderRestaurant.Responsitory;
 using OrderRestaurant.Service;
 
 namespace OrderRestaurant.Controllers
@@ -47,6 +48,25 @@ namespace OrderRestaurant.Controllers
             {
                 return StatusCode(500, $"Bị lỗi: {ex.Message}");
             }
+        }
+        [HttpGet("get-search")]
+        public async Task<IActionResult> SearchAndPaginate([FromQuery] QuerryOrder parameters)
+        {
+            var (totalItems, totalPages, request) = await _request.SearchAndPaginate(parameters);
+
+            if (totalItems == 0)
+            {
+                return NotFound("Không tìm thấy kết quả");
+            }
+
+            var response = new
+            {
+                TotalItems = totalItems,
+                TotalPages = totalPages,
+                Request = request
+            };
+
+            return Ok(response);
         }
         [HttpGet]
         [Route("{id}")]
