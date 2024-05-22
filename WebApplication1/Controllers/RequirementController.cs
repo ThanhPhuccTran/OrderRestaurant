@@ -10,6 +10,7 @@ using OrderRestaurant.Helpers;
 using OrderRestaurant.Model;
 using OrderRestaurant.Responsitory;
 using OrderRestaurant.Service;
+using System.Security.Claims;
 
 namespace OrderRestaurant.Controllers
 {
@@ -20,11 +21,14 @@ namespace OrderRestaurant.Controllers
         private readonly ApplicationDBContext _context;
         private readonly IRequest _request;
         private readonly ICommon<RequirementModel> _common;
-        public RequirementController(ApplicationDBContext context,IRequest request, ICommon<RequirementModel> common)
+        private readonly IPermission _permissionRepository;
+        private const string TYPE_Requirement = "Requirement";
+        public RequirementController(ApplicationDBContext context,IRequest request, ICommon<RequirementModel> common, IPermission permissionRepository)
         {
             _context = context;
             _request = request;
             _common = common;
+            _permissionRepository = permissionRepository;
         }
 
         [HttpGet("get-request-all")]
@@ -112,6 +116,14 @@ namespace OrderRestaurant.Controllers
         {
             try
             {
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return NotFound("Ko co rolename");
+                }
+
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Post, TYPE_Requirement))
+                    return Unauthorized();
                 var request = await _request.CompleteRequestAsync(requestId);
                 return Ok("Yêu cầu đã hoàn thành");
             }
@@ -126,7 +138,15 @@ namespace OrderRestaurant.Controllers
         {
             try
             {
-               var model = await _request.RefuseRequestAsync(requestId);
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return NotFound("Ko co rolename");
+                }
+
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Post, TYPE_Requirement))
+                    return Unauthorized();
+                var model = await _request.RefuseRequestAsync(requestId);
                 if(!model)
                 {
                     return NotFound("Không tìm thấy");
@@ -150,6 +170,14 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return NotFound("Ko co rolename");
+                }
+
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Delete, TYPE_Requirement))
+                    return Unauthorized();
                 var model = await _request.DeleteRequestAsync(id);
                 if (!model)
                 {
@@ -174,6 +202,14 @@ namespace OrderRestaurant.Controllers
 
             try
             {
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return NotFound("Ko co rolename");
+                }
+
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Put, TYPE_Requirement))
+                    return Unauthorized();
                 var request = await _request.UpdateRequestAsync(requestId,updatedRequirement);
                 if (!request)
                 {
