@@ -9,7 +9,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace OrderRestaurant.Responsitory
 {
-    public class FoodReponsitory : IFood, ICommon<FoodModel>
+    public class FoodReponsitory : IFood
     {
         private readonly ApplicationDBContext _context;
         public FoodReponsitory(ApplicationDBContext context)
@@ -131,17 +131,7 @@ namespace OrderRestaurant.Responsitory
                 .AsQueryable();
 
             
-            if (!string.IsNullOrWhiteSpace(querry.SortBy))
-            {
-                if (querry.SortBy.Equals("GiamDan", StringComparison.OrdinalIgnoreCase))
-                {
-                    query = query.OrderByDescending(s => s.UnitPrice);
-                }
-                else if (querry.SortBy.Equals("TangDan", StringComparison.OrdinalIgnoreCase))
-                {
-                    query = query.OrderBy(s => s.UnitPrice);
-                }
-            }
+           
            
             var foods = await query
                 .Select(f => new Food
@@ -159,23 +149,26 @@ namespace OrderRestaurant.Responsitory
             return  foods;
         }
 
-        public async Task<(int totalItems, int totalPages, List<FoodModel> items)> SearchAndPaginate(QuerryObject querryObject)
+        public async Task<(int totalItems, int totalPages, List<FoodModel> items)> SearchAndPaginate(QuerryFood querryFood)
         {
             var query = _context.Foods
                                 .Include(f=>f.Category)
                                 .AsQueryable();
 
             // Áp dụng tìm kiếm nếu có
-            if (!string.IsNullOrWhiteSpace(querryObject.Search))
+            if (!string.IsNullOrWhiteSpace(querryFood.Search))
             {
-                query = query.Where(f => EF.Functions.Like(f.NameFood, $"%{querryObject.Search}%"));
+                query = query.Where(f => EF.Functions.Like(f.NameFood, $"%{querryFood.Search}%"));
             }
-
+            if (querryFood.CategoryId != null)
+            {
+                query = query.Where(o => o.CategoryId == querryFood.CategoryId);
+            }
             // Tính toán số trang và lấy dữ liệu phân trang
             var totalItems = await query.CountAsync();
-            var totalPages = (int)Math.Ceiling((double)totalItems / querryObject.PageSize);
-            var skipNumber = (querryObject.PageNumber - 1) * querryObject.PageSize;
-            var items = await query.Skip(skipNumber).Take(querryObject.PageSize).ToListAsync();
+            var totalPages = (int)Math.Ceiling((double)totalItems / querryFood.PageSize);
+            var skipNumber = (querryFood.PageNumber - 1) * querryFood.PageSize;
+            var items = await query.Skip(skipNumber).Take(querryFood.PageSize).ToListAsync();
             var foods = await query
                 .Select(f => new FoodModel
                 {
@@ -195,7 +188,7 @@ namespace OrderRestaurant.Responsitory
                                    .FirstOrDefault(),
                 })
                 .Skip(skipNumber)
-                .Take(querryObject.PageSize)
+                .Take(querryFood.PageSize)
                 .ToListAsync();
             return (totalItems, totalPages, foods);
         }

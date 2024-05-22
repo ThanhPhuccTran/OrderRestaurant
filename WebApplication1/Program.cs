@@ -37,7 +37,7 @@ namespace WebApplication1
             builder.Services.AddScoped<INotification, NotificationReponsitory>();
             builder.Services.AddScoped<IRequest, RequestReponsitory>();
 
-            builder.Services.AddScoped<ICommon<FoodModel>, FoodReponsitory>();
+            /*builder.Services.AddScoped<ICommon<FoodModel>, FoodReponsitory>();*/
             builder.Services.AddScoped<ICommon<Table>, TableReponsitory>();
             builder.Services.AddScoped<ICommon<OrderModel>, OrderReponsitory>();
             builder.Services.AddScoped<ICommon<CategoryModel>, CategoryReponsitory>();

@@ -255,6 +255,14 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return NotFound("Ko co rolename");
+                }
+
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Post, TYPE_Order))
+                    return Unauthorized();
                 var model = await _orderRepository.FindOrderById(OrderId);
                 if (model == null)
                 {
@@ -313,6 +321,14 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return NotFound("Ko co rolename");
+                }
+
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Post, TYPE_Order))
+                    return Unauthorized();
                 var models = await _orderRepository.FindOrdersByTable(TableId, Constants.ORDER_APPROVE);
                 if (models == null || models.Count == 0)
                 {
@@ -381,6 +397,14 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return NotFound("Ko co rolename");
+                }
+
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Get, TYPE_Order))
+                    return Unauthorized();
                 var model = await _orderRepository.FindOrdersByTable(tableId, Constants.ORDER_APPROVE);
 
                 if (model == null || model.Count == 0)
@@ -490,6 +514,14 @@ namespace OrderRestaurant.Controllers
             }
             try
             {
+                var roleName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleName == null)
+                {
+                    return NotFound("Ko co rolename");
+                }
+
+                if (!_permissionRepository.CheckPermission(roleName, Constants.Post, TYPE_Order))
+                    return Unauthorized();
                 var model = await _orderRepository.FindOrderById(OrderId);
                 if (model == null)
                 {
