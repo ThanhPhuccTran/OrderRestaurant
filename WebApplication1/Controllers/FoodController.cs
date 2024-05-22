@@ -20,18 +20,17 @@ namespace OrderRestaurant.Controllers
         private readonly IFood _foodRepository;
         private readonly ApplicationDBContext _context;
         private readonly ICategory _categoryRespository;
-        private readonly ICommon<FoodModel> _common;
         private readonly Microsoft.AspNetCore.Hosting.IHostingEnvironment env;
         private readonly IPermission _permissionRepository;
         private const string TYPE_FOOD = "Food";
        
-        public FoodController(IFood foodRepository,ICategory categoryRespository, ApplicationDBContext context, Microsoft.AspNetCore.Hosting.IHostingEnvironment env , ICommon<FoodModel> common , IPermission permissionRepository)
+        public FoodController(IFood foodRepository,ICategory categoryRespository, ApplicationDBContext context, Microsoft.AspNetCore.Hosting.IHostingEnvironment env ,IPermission permissionRepository)
         {
             _foodRepository = foodRepository;
             _context = context;
             this.env = env;
             _categoryRespository = categoryRespository;
-            _common = common;
+           
             _permissionRepository = permissionRepository;
         }
 
@@ -105,7 +104,7 @@ namespace OrderRestaurant.Controllers
         }
        
         [HttpGet("get-search-page")]
-        public async Task<IActionResult> SearchAndPaginate([FromQuery] QuerryObject parameters)
+        public async Task<IActionResult> SearchAndPaginate([FromQuery] QuerryFood parameters)
         {
             if (!ModelState.IsValid)
             {
@@ -115,7 +114,7 @@ namespace OrderRestaurant.Controllers
             {
               
 
-                var (totalItems, totalPages, foods) = await _common.SearchAndPaginate(parameters);
+                var (totalItems, totalPages, foods) = await _foodRepository.SearchAndPaginate(parameters);
 
                 if (totalItems == 0)
                 {

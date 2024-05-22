@@ -15,5 +15,6 @@ namespace OrderRestaurant.Service
         Task<Food>UpdateFood (int id, UpdateFoodDTO updateFoodDTO);
         Task<Food?> DeleteFood(int id);
         Task<bool> FoodExits(int id);
+        Task<(int totalItems, int totalPages, List<FoodModel> items)> SearchAndPaginate(QuerryFood querryFood);
     }
 }
